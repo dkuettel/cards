@@ -1,0 +1,11 @@
+#!/bin/zsh
+set -eux -o pipefail
+
+base=${0:a:h}
+cd $base
+
+if [[ ! -e .venv ]]; then
+    vv-init
+fi
+
+vv pip-sync python/requirements.txt
