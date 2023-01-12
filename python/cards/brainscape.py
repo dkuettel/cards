@@ -15,22 +15,10 @@ def transform(
 ):
     rows = export_path.read_text().splitlines()
     rows = list(csv.reader(rows))[1:]
-    for row in rows:
-        question, answer, name = row
-        named = (
-            name.replace(" ", "-")
-            .replace("/", "-")
-            .replace(",", "-")
-            .replace(".", "-")
-            .replace("?", "")
-            .replace(":", "")
-            .replace("(", "")
-            .replace(")", "")
-            .replace('"', "")
-            .replace("'", "")
-        )
-        out = target / (named + ".md")
+    for i, (question, answer, name) in enumerate(rows):
+        out = target / f"todo-{i:03d}/card.md"
         assert not out.exists(), out
+        out.parent.mkdir()
         out.write_text(name + "\n\n---\n\n" + question + "\n\n---\n\n" + answer)
 
 
