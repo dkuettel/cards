@@ -40,6 +40,8 @@ tomli==2.0.1
     # via pyserde
 tomli-w==1.0.0
     # via pyserde
+tqdm==4.64.1
+    # via -r requirements.in
 typing-extensions==4.4.0
     # via typing-inspect
 typing-inspect==0.8.0

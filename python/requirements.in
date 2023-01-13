@@ -1,4 +1,6 @@
 click
 flask
+ipdb
 pyserde[toml]
 requests
+tqdm
