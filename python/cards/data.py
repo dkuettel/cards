@@ -52,8 +52,8 @@ class PlainIds:
 @serde(type_check=Strict)
 @dataclass(frozen=True)
 class ReverseIds:
-    forward: str
-    backward: str
+    # NOTE using mochi's own reverse functionality?
+    id: str
 
 
 @serde(type_check=Strict)
