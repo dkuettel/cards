@@ -69,6 +69,7 @@ class Mochi:
     ids: Optional[Union[PlainIds, ReverseIds, VocabIds]] = None
 
 
+# TODO sadly not a very specific name here
 @dataclass
 class Entry:
     folder: Path
@@ -78,12 +79,24 @@ class Entry:
 
     @classmethod
     def from_folder(cls, folder: Path):
+        mochi_path = folder / "mochi.json"
+        if mochi_path.exists():
+            mochi = from_json(Mochi, mochi_path.read_text())
+        else:
+            mochi = Mochi()
         return cls(
             folder=folder,
             meta=from_toml(Meta, (folder / "meta.toml").read_text()),
-            mochi=from_json(Mochi, (folder / "mochi.json").read_text()),
+            mochi=mochi,
             content=(folder / "content.md").read_text(),
         )
 
     def write(self):
         (self.folder / "mochi.json").write_text(to_json(self.mochi))
+
+
+def get_all_entries(base: Path) -> list[Entry]:
+    # NOTE we only consider folders with a meta.toml a valid entry
+    # meta.toml however can be empty
+    meta_paths = base.rglob("meta.toml")
+    return [Entry.from_folder(p.parent) for p in meta_paths]
