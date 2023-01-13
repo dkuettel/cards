@@ -59,12 +59,12 @@ class ReverseIds:
 @serde(type_check=Strict)
 @dataclass(frozen=True)
 class VocabIds:
-    forward: str
-    backward: str
+    forward: Optional[str]
+    backward: Optional[str]
 
 
 @serde(type_check=Strict)
-@dataclass(frozen=True)
+@dataclass
 class Mochi:
     ids: Optional[Union[PlainIds, ReverseIds, VocabIds]] = None
 
