@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Callable, Literal, Optional, Union
 
 from serde import serde
 from serde.core import Strict, Untagged
@@ -64,13 +64,13 @@ class VocabIds:
 
 
 @serde(type_check=Strict)
-@dataclass
+@dataclass(frozen=True)
 class Mochi:
     ids: Optional[Union[PlainIds, ReverseIds, VocabIds]] = None
 
 
 # TODO sadly not a very specific name here
-@dataclass
+@dataclass(frozen=True)
 class Entry:
     folder: Path
     meta: Meta
@@ -100,3 +100,16 @@ def get_all_entries(base: Path) -> list[Entry]:
     # meta.toml however can be empty
     meta_paths = base.rglob("meta.toml")
     return [Entry.from_folder(p.parent) for p in meta_paths]
+
+
+def update_mochi_in_folder(folder: Path, update: Callable[[Mochi], Mochi]):
+    # TODO curious, from_json does return type generic, but from_dict doesnt?
+    path = folder / "mochi.json"
+    if path.exists():
+        m = from_json(Mochi, path.read_text())
+    else:
+        m = Mochi()
+    m = update(m)
+    # TODO careful race condition, if we do threading especially
+    # at least local to the python process we should lock the file?
+    path.write_text(to_json(m))

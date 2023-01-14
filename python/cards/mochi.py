@@ -53,7 +53,7 @@ class Deck:
     name: str = field()
 
 
-@dataclass
+@dataclass(frozen=True)
 class Authentication:
     token: str
 
