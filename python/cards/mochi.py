@@ -31,7 +31,13 @@ class Card:
     id: str = field()
     content: str = field()
     deck_id: str = field(metadata={"serde_rename": "deck-id"})
-    review_reverse: bool = field(metadata={"serde_rename": "review-reverse?"})
+    # TODO I want no default, so I dont forget to set it
+    # but I need a default, because the API doesnt always return it
+    # if we could separate serde from the dataclass somehow
+    # TODO or alternatively, if we dont use that feature anyway, we could forget it
+    # TODO a manual approach would be a hand-written new_complete, that requires everything
+    # but also that one we might forget to update
+    review_reverse: bool = field(default=False, metadata={"serde_rename": "review-reverse?"})
     # TODO gonna need attachments eventually for pictures
 
     @staticmethod
