@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 
+import pandoc
 from cards.data import (
     Entry,
     Mochi,
@@ -14,6 +15,20 @@ from cards.data import (
     VocabIds,
     update_mochi_in_folder,
 )
+from pandoc.types import HorizontalRule, Meta, Pandoc  # pyright: ignore
+
+
+def parse_md(text: str) -> list:
+    # TODO very haskell style, pattern matching works on syntax elements :)
+    return pandoc.read(text, format="markdown")[1]  # pyright: ignore
+
+
+def mochi_md(doc: list) -> str:
+    return pandoc.write(Pandoc(Meta({}), doc), format="markdown+hard_line_breaks")
+
+
+def mochi_md_from_md(text: str) -> str:
+    return mochi_md(parse_md(text))
 
 
 @dataclass(frozen=True)
@@ -67,14 +82,14 @@ def get_card_from_Plain(entry: Entry, _: Plain) -> tuple[list[NewCard], list[Car
         return [], [
             Card(
                 id=entry.mochi.ids.id,
-                content=entry.content,
+                content=mochi_md_from_md(entry.content),
                 review_reverse=False,
             )
         ]
     else:
         return [
             NewCardPlain(
-                content=entry.content,
+                content=mochi_md_from_md(entry.content),
                 review_reverse=False,
                 entry=entry,
             )
@@ -94,14 +109,14 @@ def get_card_from_Reverse(entry: Entry, _: Reverse) -> tuple[list[NewCard], list
         return [], [
             Card(
                 id=entry.mochi.ids.id,
-                content=entry.content,
+                content=mochi_md_from_md(entry.content),
                 review_reverse=True,
             )
         ]
     else:
         return [
             NewCardReverse(
-                content=entry.content,
+                content=mochi_md_from_md(entry.content),
                 review_reverse=False,
                 entry=entry,
             )
@@ -149,9 +164,25 @@ class NewCardVocabBackward(NewCard):
 def get_card_from_Vocab(entry: Entry, meta: Vocab) -> tuple[list[NewCard], list[Card]]:
 
     lang1, lang2 = meta.languages
-    part1, part2 = split_content(entry.content)
-    forward_content = f"\n{part1}\n\n_to {lang2}_\n\n---\n\n{part2}\n"
-    backward_content = f"\n{part2}\n\n_to {lang1}_\n\n---\n\n{part1}\n"
+
+    doc = parse_md(entry.content)
+
+    split_at = doc.index(HorizontalRule())
+    forward_doc = (
+        parse_md(f"_to {lang2}_")
+        + doc[:split_at]
+        + [HorizontalRule()]
+        + doc[split_at + 1 :]
+    )
+    backward_doc = (
+        parse_md(f"_to {lang1}_")
+        + doc[split_at + 1 :]
+        + [HorizontalRule()]
+        + doc[:split_at]
+    )
+
+    forward_content = mochi_md(forward_doc)
+    backward_content = mochi_md(backward_doc)
 
     ids = entry.mochi.ids
     if type(ids) is not VocabIds:
@@ -194,3 +225,40 @@ def get_card_from_Vocab(entry: Entry, meta: Vocab) -> tuple[list[NewCard], list[
         )
 
     return new_cards, cards
+
+
+def test_format():
+    print(
+        mochi_md_from_md(
+            """
+satire
+
+---
+
+The use of
+
+- humour
+- irony
+- exaggeration
+- or ridicule
+
+to expose and criticize
+people's stupidity or vices,
+particularly in the context of contemporary politics
+and other topical issues.
+"""
+        )
+    )
+    # TODO pandoc supports the extension 'hard_line_breaks'
+    # that seems to be what mochi does
+    # does it mean we could load as is and output with the extension to transform?
+    # then maybe I can ask what lib, or what pandoc settings mochi is using
+    # > pandoc content.md --from=markdown --to=markdown+hard_line_breaks
+    # works, but then I need to call something, is there a python interface?
+    # it also reformats the --- to very many dashes, seems depending on the text width
+    # so how do I find pages for reversing, ah nice it has the AST
+    # TODO depending on the settings I use might want to update the previewer? so far changes are only on --to=... side
+
+
+if __name__ == "__main__":
+    test_format()
