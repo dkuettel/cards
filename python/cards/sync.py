@@ -34,13 +34,15 @@ def main(source: Path = Path("brainscape")):
         c = M.create_card(authentication, nc)
         new_card.update_on_disk(c.id)
 
-    changed = 0
+    # changed = 0
     for card in tqdm(cards, desc="update cards"):
         c = card_from_card(card, deck_id)
         u = M.update_card(authentication, c)
-        if u != c:
-            changed += 1
-    print(f"{changed}/{len(cards)} actual changes.")
+        # TODO ok that was stupid, of course this is always the same
+        # we would have to check _before_ ...
+        # if u != c:
+        #     changed += 1
+    # print(f"{changed}/{len(cards)} actual changes.")
 
 
 def card_from_card(card: E.Card, deck_id: str) -> M.Card:
