@@ -37,23 +37,19 @@ class NewCard(ABC):
 def get_cards_from_entries(entries: list[Entry]) -> tuple[list[NewCard], list[Card]]:
     new_cards, cards = [], []
     for entry in entries:
-        c = get_card_from_entry(entry)
-        if isinstance(c, NewCard):
-            new_cards.append(c)
-        elif isinstance(c, Card):
-            cards.append(c)
-        else:
-            assert False, c
+        nc, c = get_card_from_entry(entry)
+        new_cards.extend(nc)
+        cards.extend(c)
     return new_cards, cards
 
 
 def get_card_from_entry(entry: Entry) -> tuple[list[NewCard], list[Card]]:
-    if type(entry.meta) is Plain:
-        return get_card_from_Plain(entry, entry.meta)
-    elif type(entry.meta) is Reverse:
-        return get_card_from_Reverse(entry, entry.meta)
-    elif type(entry.meta) is Vocab:
-        return get_card_from_Vocab(entry, entry.meta)
+    if type(entry.meta.cards) is Plain:
+        return get_card_from_Plain(entry, entry.meta.cards)
+    elif type(entry.meta.cards) is Reverse:
+        return get_card_from_Reverse(entry, entry.meta.cards)
+    elif type(entry.meta.cards) is Vocab:
+        return get_card_from_Vocab(entry, entry.meta.cards)
     else:
         assert False, entry.meta
 

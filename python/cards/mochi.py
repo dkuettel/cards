@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pprint import pprint
 from typing import Iterator, Optional
 from uuid import uuid4
 
 import requests
 from requests.auth import HTTPBasicAuth
-from serde import Strict, field, from_dict, serde, to_dict
+from serde import Strict, from_dict, serde, to_dict
 from tqdm import tqdm
 
 # TODO things would be cleaner if serde didnt taint the dataclass?
@@ -20,8 +20,8 @@ from tqdm import tqdm
 @dataclass(frozen=True)
 class NewCard:
     content: str = field()
-    deck_id: str = field(rename="deck-id")
-    review_reverse: bool = field(default=False, rename="review-reverse?")
+    deck_id: str = field(metadata={"serde_rename": "deck-id"})
+    review_reverse: bool = field(metadata={"serde_rename": "review-reverse?"})
     # TODO gonna need attachments eventually for pictures
 
 
@@ -30,13 +30,17 @@ class NewCard:
 class Card:
     id: str = field()
     content: str = field()
-    deck_id: str = field(rename="deck-id")
-    review_reverse: bool = field(default=False, rename="review-reverse?")
+    deck_id: str = field(metadata={"serde_rename": "deck-id"})
+    review_reverse: bool = field(metadata={"serde_rename": "review-reverse?"})
     # TODO gonna need attachments eventually for pictures
 
     @staticmethod
     def from_dict(data) -> Card:
         # TODO unfortunately serde doesnt seem to annotate generically for pyright?
+        # it does for from_json, maybe I'm importing the wrong thing here?
+        # or we dont use the response.json() and the response.text instead?
+        # then we have types
+        # TODO we have response.text if we want to use generic from_json with pyright
         return from_dict(Card, data)  # pyright: ignore
 
 
@@ -66,6 +70,7 @@ def iterate_paged_docs(
     auth = HTTPBasicAuth(authentication.token, "")
     while True:
         response = requests.get(url, params={**params, **page_params}, auth=auth)
+        assert response.status_code == 200, response.text
         response_json = response.json()
         bookmark = response_json["bookmark"]
         docs = response_json["docs"]
@@ -92,6 +97,7 @@ def create_card(authentication: Authentication, new_card: NewCard) -> Card:
     body = to_dict(new_card)
     auth = HTTPBasicAuth(authentication.token, "")
     response = requests.post(url, json=body, auth=auth)
+    assert response.status_code == 200, response.text
     return Card.from_dict(response.json())
 
 
@@ -103,6 +109,7 @@ def update_card(authentication: Authentication, card: Card) -> Card:
     body.pop("id")
     auth = HTTPBasicAuth(authentication.token, "")
     response = requests.post(url, json=body, auth=auth)
+    assert response.status_code == 200, response.text
     return Card.from_dict(response.json())
 
 
