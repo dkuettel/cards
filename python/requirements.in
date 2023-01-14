@@ -1,6 +1,8 @@
 click
 flask
 ipdb
+ipython
+pandoc
 pyserde[toml]
 requests
 tqdm
