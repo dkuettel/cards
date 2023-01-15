@@ -52,11 +52,8 @@ class Document:
 
     @classmethod
     def from_path(cls, path: Path):
-        header, text = split_content(path.read_text())
-        if header is None:
-            meta = MetaHeader(None, None)
-        else:
-            meta = MetaHeader.from_json(header)
+        meta = read_meta_from_disk(path)
+        _, text = split_content(path.read_text())
         return cls.from_text(
             path=path,
             meta=meta,
@@ -137,8 +134,17 @@ def merge_content(header: Optional[str], text: str) -> str:
     )
 
 
+def read_meta_from_disk(path: Path) -> MetaHeader:
+    header, _ = split_content(path.read_text())
+    if header is None:
+        meta = MetaHeader(None, None)
+    else:
+        meta = MetaHeader.from_json(header)
+    return meta
+
+
 # TODO race conditions could happen here
-def update_meta_on_disk(path: Path, meta: MetaHeader):
+def write_meta_to_disk(meta: MetaHeader, path: Path):
     _, text = split_content(path.read_text())
     header = meta.to_json()
     assert len(header.split("\n")) == 1, header
@@ -148,7 +154,7 @@ def update_meta_on_disk(path: Path, meta: MetaHeader):
 
 def test_meta_injection():
     meta = MetaHeader("first", "second")
-    update_meta_on_disk(Path("./example.md"), meta)
+    write_meta_to_disk(meta, Path("./example.md"))
 
 
 def test_loading():
