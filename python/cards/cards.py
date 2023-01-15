@@ -43,45 +43,43 @@ class Card:
     content: str
 
 
-def get_cards_from_documents(docs: list[Document]) -> tuple[list[NewCard], list[Card]]:
-    return list(_get_new_cards(docs)), list(_get_cards(docs))
+def get_new_cards(docs: list[Document]) -> list[NewCard]:
+    return [c for doc in docs for c in get_new_cards_from_document(doc)]
 
 
-def _get_new_cards(docs: list[Document]) -> Iterator[NewCard]:
-    for doc in docs:
-        if doc.meta.id is None:
-            yield NewCardForward(as_mochi_md(doc.md, doc.prompt), doc.path)
-        if doc.meta.reverse_id is None and doc.reverse_md is not None:
-            yield NewCardBackward(
-                as_mochi_md(doc.reverse_md, doc.reverse_prompt), doc.path
-            )
+def get_new_cards_from_document(doc: Document) -> Iterator[NewCard]:
+    if doc.meta.id is None:
+        yield NewCardForward(as_mochi_md(doc.md, doc.prompt), doc.path)
+    if doc.meta.reverse_id is None and doc.reverse_md is not None:
+        yield NewCardBackward(as_mochi_md(doc.reverse_md, doc.reverse_prompt), doc.path)
 
 
-def _get_cards(docs: list[Document]) -> Iterator[Card]:
-    for doc in docs:
-        if doc.meta.id is not None:
-            yield Card(doc.meta.id, as_mochi_md(doc.md, doc.prompt))
-        if doc.meta.reverse_id is not None and doc.reverse_md is not None:
-            yield Card(
-                doc.meta.reverse_id, as_mochi_md(doc.reverse_md, doc.reverse_prompt)
-            )
-        if doc.meta.reverse_id is not None and doc.reverse_md is None:
-            # TODO what if we remove a prompt, and reverse disappears
-            # will we ever update meta? sync might now, but disk might not update
-            # maybe that should be part of Document? it's the abstraction there when things go
-            meta = read_meta_from_disk(doc.path)
-            meta = replace(meta, reverse_id=None)
-            write_meta_to_disk(meta, doc.path)
+def get_cards(docs: list[Document]) -> list[Card]:
+    return [c for doc in docs for c in get_cards_from_document(doc)]
+
+
+def get_cards_from_document(doc: Document) -> Iterator[Card]:
+    if doc.meta.id is not None:
+        yield Card(doc.meta.id, as_mochi_md(doc.md, doc.prompt))
+    if doc.meta.reverse_id is not None and doc.reverse_md is not None:
+        yield Card(doc.meta.reverse_id, as_mochi_md(doc.reverse_md, doc.reverse_prompt))
+    if doc.meta.reverse_id is not None and doc.reverse_md is None:
+        # TODO what if we remove a prompt, and reverse disappears
+        # will we ever update meta? sync might now, but disk might not update
+        # maybe that should be part of Document? it's the abstraction there when things go
+        meta = read_meta_from_disk(doc.path)
+        meta = replace(meta, reverse_id=None)
+        write_meta_to_disk(meta, doc.path)
 
 
 def as_mochi_md(body: list, prompt: Optional[list]) -> str:
     import pandoc
-    from pandoc.types import Emph, Meta, Pandoc  # pyright: ignore
+    from pandoc.types import Emph, Meta, Pandoc, Para  # pyright: ignore
 
     if prompt is None:
         prefix = []
     else:
-        prefix = Emph(prompt)
+        prefix = [Para([Emph(prompt)])]
 
     return pandoc.write(
         Pandoc(Meta({}), prefix + body), format="markdown+hard_line_breaks"

@@ -62,10 +62,15 @@ class Document:
 
     @classmethod
     def from_text(cls, path: Path, meta: MetaHeader, text: str):
-        from pandoc.types import HorizontalRule, Para, Str  # pyright: ignore
+        from pandoc.types import HorizontalRule, Para, Space, Str  # pyright: ignore
 
         def is_prompt(e) -> bool:
-            return type(e) is Para and len(e[0]) > 0 and e[0][0] == Str("!")
+            return (
+                type(e) is Para
+                and len(e[0]) >= 2
+                and e[0][0] == Str("!")
+                and e[0][1] == Space()
+            )
 
         _, body = pandoc.read(text, format="markdown")  # pyright: ignore
 
@@ -81,7 +86,7 @@ class Document:
         if len(prompts) == 0:
             prompt = None
         elif len(prompts) == 1:
-            prompt = prompts[0]
+            prompt = prompts[0][2:]
         else:
             assert False, prompts
 
@@ -92,7 +97,7 @@ class Document:
         elif len(reverse_prompts) == 1:
             reverse_md = pages[1] + [HorizontalRule()] + pages[0]
             reverse_md = [e for e in reverse_md if not is_prompt(e)]
-            reverse_prompt = reverse_prompts[0]
+            reverse_prompt = reverse_prompts[0][2:]
         else:
             assert False, reverse_prompts
 
@@ -150,6 +155,10 @@ def write_meta_to_disk(meta: MetaHeader, path: Path):
     assert len(header.split("\n")) == 1, header
     content = merge_content(header, text)
     path.write_text(content)
+
+
+def get_all_documents(base: Path) -> list[Document]:
+    return [Document.from_path(p) for p in base.rglob("*.md")]
 
 
 def test_meta_injection():
