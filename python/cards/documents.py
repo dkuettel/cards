@@ -125,17 +125,17 @@ def split_content(content: str) -> tuple[Optional[str], str]:
 
 def merge_content(header: Optional[str], text: str) -> str:
     if header is None:
-        return text
-    return (
-        "\n".join(
-            [
-                "``` {.json}",
-                header,
-                "```",
-                "",
-            ]
-        )
-        + ("\n" + text)
+        return text.lstrip("\n")
+
+    assert "\n" not in header
+    return "\n".join(
+        [
+            "``` {.json}",
+            header,
+            "```",
+            "",
+        ]
+        + text.lstrip("\n").split("\n")
     )
 
 
