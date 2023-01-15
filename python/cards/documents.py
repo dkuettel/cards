@@ -86,7 +86,7 @@ class Document:
         if len(prompts) == 0:
             prompt = None
         elif len(prompts) == 1:
-            prompt = prompts[0][2:]
+            prompt = prompts[0][0][2:]
         else:
             assert False, prompts
 
@@ -97,7 +97,7 @@ class Document:
         elif len(reverse_prompts) == 1:
             reverse_md = pages[1] + [HorizontalRule()] + pages[0]
             reverse_md = [e for e in reverse_md if not is_prompt(e)]
-            reverse_prompt = reverse_prompts[0][2:]
+            reverse_prompt = reverse_prompts[0][0][2:]
         else:
             assert False, reverse_prompts
 
