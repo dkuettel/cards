@@ -8,6 +8,8 @@ asttokens==2.2.1
     # via stack-data
 backcall==0.2.0
     # via ipython
+beartype==0.11.0
+    # via -r requirements.in
 casefy==0.1.7
     # via pyserde
 certifi==2022.12.7
