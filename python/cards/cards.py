@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -23,7 +23,7 @@ class NewCardForward(NewCard):
 
     def update_on_disk(self, card_id: str):
         meta = read_meta_from_disk(self.path)
-        meta = replace(meta, id=card_id)
+        meta = meta.with_id(card_id)
         write_meta_to_disk(meta, self.path)
 
 
@@ -33,7 +33,7 @@ class NewCardBackward(NewCard):
 
     def update_on_disk(self, card_id: str):
         meta = read_meta_from_disk(self.path)
-        meta = replace(meta, reverse_id=card_id)
+        meta = meta.with_reverse_id(card_id)
         write_meta_to_disk(meta, self.path)
 
 
@@ -68,7 +68,7 @@ def get_cards_from_document(doc: Document) -> Iterator[Card]:
         # will we ever update meta? sync might now, but disk might not update
         # maybe that should be part of Document? it's the abstraction there when things go
         meta = read_meta_from_disk(doc.path)
-        meta = replace(meta, reverse_id=None)
+        meta = meta.with_reverse_id(None)
         write_meta_to_disk(meta, doc.path)
 
 

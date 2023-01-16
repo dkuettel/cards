@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from pprint import pprint
 from typing import Any, Optional, Type, TypeVar
@@ -39,6 +39,13 @@ class MetaHeader:
             id=if_bearable(data.pop("id"), Optional[str]),
             reverse_id=if_bearable(data.pop("reverse-id"), Optional[str]),
         )
+
+    # TODO because pyright doesnt understand dataclasses.replace :/
+    def with_id(self, id: Optional[str]) -> MetaHeader:
+        return MetaHeader(**asdict(self.id), id=id)
+
+    def with_reverse_id(self, reverse_id: Optional[str]) -> MetaHeader:
+        return MetaHeader(**asdict(self.id), reverse_id=reverse_id)
 
 
 @dataclass(frozen=True)
