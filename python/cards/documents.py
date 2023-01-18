@@ -47,6 +47,9 @@ class MetaHeader:
     def with_reverse_id(self, reverse_id: Optional[str]) -> MetaHeader:
         return MetaHeader(**asdict(self.id), reverse_id=reverse_id)
 
+    def ids(self) -> list[str]:
+        return [i for i in [self.id, self.reverse_id] if i is not None]
+
 
 @dataclass(frozen=True)
 class Document:

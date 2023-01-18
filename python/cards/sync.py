@@ -3,12 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import click
-from cards.data import get_all_entries
 from cards.documents import get_all_documents
-from cards.entries import get_cards_from_entries
 from tqdm import tqdm
 
-from cards import entries as E, mochi as M
+from cards import mochi as M
 from cards.cards import Card, NewCard, get_cards, get_new_cards
 
 # TODO python 3.10 has good pprint for dataclasses too
@@ -36,6 +34,7 @@ def main(source: Path = Path("brainscape/v2")):
     deck_id = "f1Xj0eiR"  # brainscape2
 
     documents = get_all_documents(source)
+    m_cards = M.list_cards(authentication, deck_id)
 
     new_cards = get_new_cards(documents)
     print(f"{len(new_cards)} new cards to add.")
@@ -44,17 +43,29 @@ def main(source: Path = Path("brainscape/v2")):
         c = M.create_card(authentication, nc)
         new_card.update_on_disk(c.id)
 
+    # TODO cache yes, but also missing deletion, so need to get full list anyway
+    # and probably want to move the doc meta update (when prompt disappears) to documents?
+    # and explicitly call it, just like we update disk here explicity on NewCard
+
     cards = get_cards(documents)
     print(f"{len(cards)} to potentially update.")
-    # changed = 0
     for card in tqdm(cards, desc="update cards"):
         c = card_from_card(card, deck_id)
-        u = M.update_card(authentication, c)
-        # TODO ok that was stupid, of course this is always the same
-        # we would have to check _before_ ...
-        # if u != c:
-        #     changed += 1
+        M.update_card(authentication, c)
+    # TODO not giving a stats now for how much actually changed
     # print(f"{changed}/{len(cards)} actual changes.")
+
+    known_ids = {i for doc in documents for i in doc.meta.ids()}
+    mochi_ids = {i.id for i in m_cards}
+    # TODO here could also double check both directions if ids match up
+    ids_to_delete = mochi_ids - known_ids
+    print(f"{len(ids_to_delete)} cards to delete on mochi.")
+    for card_id in tqdm(ids_to_delete, desc="delete cards"):
+        # TODO there is also an option to set trash to True
+        # is it then not listed anymore in this deck? I think it's listed
+        # so manual stuff will be listed, since we dont parse the trashed yet
+        # that's a bit inconsistent
+        M.delete_card(authentication, card_id)
 
 
 def card_from_card(card: Card, deck_id: str) -> M.Card:

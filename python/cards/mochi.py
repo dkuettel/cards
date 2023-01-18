@@ -127,6 +127,13 @@ def update_card(authentication: Authentication, card: Card) -> Card:
     return Card.from_dict(response.json())
 
 
+def delete_card(authentication: Authentication, card_id: str):
+    url = f"https://app.mochi.cards/api/cards/{card_id}"
+    auth = HTTPBasicAuth(authentication.token, "")
+    response = requests.delete(url, auth=auth)
+    assert response.status_code == 200, response.text
+
+
 def test_list_some():
     deck_id = "-"  # test
     authentication = Authentication("-")
