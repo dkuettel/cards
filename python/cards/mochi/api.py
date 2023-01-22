@@ -6,9 +6,10 @@ from typing import Iterator, Optional
 from uuid import uuid4
 
 import requests
-from cards.tools import if_bearable
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
+
+from cards.tools import if_bearable
 
 
 def url_at(at: str) -> str:

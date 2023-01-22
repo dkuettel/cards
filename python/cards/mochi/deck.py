@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cards.mochi.api import ApiCard, create_card, delete_card, list_cards, update_card
 from requests.auth import HTTPBasicAuth
+
+from cards.mochi.api import ApiCard, create_card, delete_card, list_cards, update_card
 
 
 @dataclass(frozen=True)

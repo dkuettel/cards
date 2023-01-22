@@ -7,6 +7,7 @@ from pprint import pprint
 from typing import Optional
 
 import pandoc
+
 from cards.tools import if_bearable
 
 

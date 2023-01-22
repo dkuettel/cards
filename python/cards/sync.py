@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tqdm import tqdm
+
 from cards.data.plain.documents import get_all_documents
 from cards.data.plain.transform import (
     get_cards_from_documents,
@@ -9,9 +11,6 @@ from cards.data.plain.transform import (
 )
 from cards.mochi.deck import MochiDeck
 from cards.mochi.state import MochiDiff, states_from_apply_diff
-from tqdm import tqdm
-
-# TODO strange, above isort doesnt seem to understand project and 3rd party imports?
 
 # TODO python 3.10 has good pprint for dataclasses too
 # from pprint import pprint
