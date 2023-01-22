@@ -45,6 +45,14 @@ class MochiDiff:
     def __len__(self):
         return len(self.removed) + len(self.changed) + len(self.new_cards)
 
+    def print_summary(self):
+        print(
+            f"{len(self)} items in diff: "
+            f"{len(self.removed)} removed, "
+            f"{len(self.changed)} changed, "
+            f"{len(self.new_cards)} new cards"
+        )
+
 
 class NewMochiCard(ABC):
     @abstractmethod
