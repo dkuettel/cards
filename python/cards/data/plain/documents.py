@@ -4,17 +4,10 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from pprint import pprint
-from typing import Any, Optional, Type, TypeVar
+from typing import Optional
 
 import pandoc
-from beartype.door import die_if_unbearable
-
-T = TypeVar("T")
-
-
-def if_bearable(value: Any, ty: Type[T]) -> T:
-    die_if_unbearable(value, ty)
-    return value
+from cards.tools import if_bearable
 
 
 @dataclass(frozen=True)
