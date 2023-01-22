@@ -15,13 +15,6 @@ from cards.mochi.state import MochiDiff, states_from_apply_diff
 # TODO python 3.10 has good pprint for dataclasses too
 # from pprint import pprint
 
-# TODO changes
-# make also removal sync correct
-# plus reverse make it so that it says at top, dont use built-in reverse for now
-# make it 2 cards: explain & name, with prompt at the top; all my cards should have a prompt, not just vocabs
-# how to keep ids when switching card types, is that desired? or just I do it manually?
-# and what happens when going from bidi to forward, will it remove the extra id?
-
 # TODO deletion can be dangerous
 # maybe archive, or thrash, and also keep a local copy, and also ask user? it should almost never happen anyway
 
