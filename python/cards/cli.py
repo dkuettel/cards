@@ -17,3 +17,14 @@ def sync():
     credentials = Credentials.from_default_file()
 
     sync(credentials.mochi.token, config.sync.deck_id, config.sync.path)
+
+
+@cli.command()
+def preview():
+    from cards.preview import main
+    from cards.config import Config
+    config = Config.from_default_file()
+
+    main(config.sync.path)
+
+

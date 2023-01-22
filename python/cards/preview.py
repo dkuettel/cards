@@ -2,7 +2,6 @@ from pathlib import Path
 from subprocess import run
 from typing import Optional
 
-import click
 from flask import Flask, current_app, redirect, render_template_string, url_for
 
 app = Flask(__name__)
@@ -110,11 +109,6 @@ def get_most_recent_md(folder: Path) -> Optional[Path]:
     return candidates[-1]
 
 
-@click.command()
 def main(watch_folder: Path = Path("./brainscape")):
     app.config["watch_folder"] = watch_folder
     app.run()
-
-
-if __name__ == "__main__":
-    main()
