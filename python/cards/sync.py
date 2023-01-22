@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import click
 from cards.data.plain.documents import get_all_documents
 from cards.data.plain.transform import (
     get_cards_from_documents,
@@ -31,9 +30,7 @@ from tqdm import tqdm
 # maybe archive, or thrash, and also keep a local copy, and also ask user? it should almost never happen anyway
 
 
-# TODO eventually move it all to a cli file
-@click.command()
-def main(source: Path = Path("brainscape/v2")):
+def sync(source: Path):
 
     token = "-"
     # deck_id = "-"  # brainscape
@@ -69,6 +66,3 @@ def main(source: Path = Path("brainscape/v2")):
 # TODO how to use pyright globally as a linter
 # does lsp does it, globally, not just per file?
 # or add it somehow as a linter instead?
-
-if __name__ == "__main__":
-    main()
