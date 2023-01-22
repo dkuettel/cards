@@ -133,6 +133,12 @@ class Document:
         return self.with_meta(self.meta.with_reverse_id(None))
 
 
+# TODO yaml_metadata_block might be what I need for the metadata json now?
+# see https://pandoc.org/MANUAL.html#extension-yaml_metadata_block
+# then everything is managed by pandoc ... could actually use round trip for convenience?
+# maybe also pandoc_title_block
+
+
 def split_content(content: str) -> tuple[Optional[str], str]:
     data = content.split("\n")
     if (
