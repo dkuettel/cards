@@ -71,5 +71,9 @@ def as_mochi_md(body: list, prompt: Optional[list]) -> str:
         prefix = [Para([Emph(prompt)])]
 
     return pandoc.write(
-        Pandoc(Meta({}), prefix + body), format="markdown+hard_line_breaks"
+        Pandoc(Meta({}), prefix + body),
+        format="markdown+hard_line_breaks",
+        # NOTE columns=3 and wrap=none forces rulers to be exactly 3 dashes (---)
+        # mochi accepts only exactly 3 dashes (---) as a new page
+        options=["--columns=3", "--wrap=none"],
     )
