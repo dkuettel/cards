@@ -33,12 +33,11 @@ class MetaHeader:
             reverse_id=if_bearable(data.pop("reverse-id"), Optional[str]),
         )
 
-    # TODO because pyright doesnt understand dataclasses.replace :/
     def with_id(self, id: Optional[str]) -> MetaHeader:
-        return MetaHeader(**asdict(self.id), id=id)
+        return MetaHeader(id, self.reverse_id)
 
     def with_reverse_id(self, reverse_id: Optional[str]) -> MetaHeader:
-        return MetaHeader(**asdict(self.id), reverse_id=reverse_id)
+        return MetaHeader(self.id, reverse_id)
 
     def ids(self) -> list[str]:
         return [i for i in [self.id, self.reverse_id] if i is not None]
