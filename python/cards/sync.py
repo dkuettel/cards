@@ -26,6 +26,7 @@ from cards.cards import Card, NewCard, get_cards, get_new_cards
 # maybe archive, or thrash, and also keep a local copy, and also ask user? it should almost never happen anyway
 
 
+# TODO eventually move it all to a cli file
 @click.command()
 def main(source: Path = Path("brainscape/v2")):
 
@@ -84,48 +85,6 @@ def new_card_from_new_card(new_card: NewCard, deck_id: str) -> M.NewCard:
         review_reverse=False,
     )
 
-
-""" draft
-we want a representation of mochi state
-and a way to send it
-diff it
-store it
-validate it
-
-but we can start with just a state
-and a full sender (idempotent)
-gives us full functionality already
-rest is just speed
-
-the state needs to mirror what we care about on mochi
-so first need to understand that
-
-but the fact that we transform entries into multiple cards is separate
-
-note there is also an "update at" field for cards
-would that be enough to know when there is a change?
-but still requires a full listing anyway
-
-even just the fact that we need a deck for the content
-and we need the id, means we need to query, or have local data
-"""
-
-""" minimal version
-load all entries
-transform them to cards (Card or NewCard)
-and send all updates
-also sync back (for NewCard) the ids
-
-transform is the main thing left right now
-entries.py that knows how to take Entry and make (New)Card?
-and sync back ids to mochi.json?
-
-now what's left is there an easy way to transform between very similar dataclasses?
-i'm fine with manual writing, but I want to be informed if something is missing
-so I should stop having default values? does pyright understand =field if no default value?
-if I want some defaults, I should only make new and from and other classmethods to never fall into this trap
-(trap: new mochi property, but defaulted, and it's never passed, even though both side have it)
-"""
 
 # TODO how to use pyright globally as a linter
 # does lsp does it, globally, not just per file?
