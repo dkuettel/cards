@@ -4,7 +4,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from cards.data.plain.documents import get_all_documents
+from cards.data.plain.documents import align_and_write_metas_to_disk, get_all_documents
 from cards.data.plain.transform import (
     get_cards_from_documents,
     get_new_cards_from_documents,
@@ -24,6 +24,7 @@ def sync(token: str, deck_id: str, path: Path):
     deck = MochiDeck.from_token(deck_id, token)
 
     documents = get_all_documents(path)
+    documents = align_and_write_metas_to_disk(documents)
 
     new_cards = get_new_cards_from_documents(documents)
     cards = get_cards_from_documents(documents)

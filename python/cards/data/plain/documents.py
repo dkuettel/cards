@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
 from typing import Optional
@@ -48,6 +48,7 @@ class MetaHeader:
 class Document:
     path: Path
     meta: MetaHeader
+    # TODO those list are pandoc element things, a bit un-explicit, and un-frozen
     md: list
     prompt: Optional[list]
     reverse_md: Optional[list]
@@ -113,6 +114,24 @@ class Document:
             reverse_prompt=reverse_prompt,
         )
 
+    def with_meta(self, meta: MetaHeader):
+        return Document(
+            path=self.path,
+            meta=meta,
+            md=list(self.md),
+            prompt=None if self.prompt is None else list(self.prompt),
+            reverse_md=None if self.reverse_md is None else list(self.reverse_md),
+            reverse_prompt=None
+            if self.reverse_prompt is None
+            else list(self.reverse_prompt),
+        )
+
+    def is_meta_aligned(self) -> bool:
+        return not (self.reverse_md is None and self.meta.reverse_id is not None)
+
+    def with_aligned_meta(self):
+        return self.with_meta(self.meta.with_reverse_id(None))
+
 
 def split_content(content: str) -> tuple[Optional[str], str]:
     data = content.split("\n")
@@ -162,6 +181,22 @@ def write_meta_to_disk(meta: MetaHeader, path: Path):
 
 def get_all_documents(base: Path) -> list[Document]:
     return [Document.from_path(p) for p in base.rglob("*.md")]
+
+
+def align_and_write_metas_to_disk(docs: list[Document]) -> list[Document]:
+    count = sum(not doc.is_meta_aligned() for doc in docs)
+    if count == 0:
+        return docs
+    print(f"Updating {count} documents with aligned meta headers.")
+
+    def f(doc: Document):
+        if doc.is_meta_aligned():
+            return doc
+        doc = doc.with_aligned_meta()
+        write_meta_to_disk(doc.meta, doc.path)
+        return doc
+
+    return [f(doc) for doc in docs]
 
 
 def test_meta_injection():

@@ -8,8 +8,6 @@ from cards.data.plain.documents import Document, read_meta_from_disk, write_meta
 from cards.mochi.deck import MochiCard
 from cards.mochi.state import NewMochiCard
 
-# TODO should it all be in brainscape.documents and brainscape.cards or transform?
-
 
 @dataclass
 class NewCardForward(NewMochiCard):
@@ -61,13 +59,6 @@ def get_cards_from_document(doc: Document) -> Iterator[MochiCard]:
         yield MochiCard(
             doc.meta.reverse_id, as_mochi_md(doc.reverse_md, doc.reverse_prompt)
         )
-    if doc.meta.reverse_id is not None and doc.reverse_md is None:
-        # TODO what if we remove a prompt, and reverse disappears
-        # will we ever update meta? sync might now, but disk might not update
-        # maybe that should be part of Document? it's the abstraction there when things go
-        meta = read_meta_from_disk(doc.path)
-        meta = meta.with_reverse_id(None)
-        write_meta_to_disk(meta, doc.path)
 
 
 def as_mochi_md(body: list, prompt: Optional[list]) -> str:
