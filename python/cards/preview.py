@@ -1,5 +1,5 @@
 from pathlib import Path
-from subprocess import run
+from subprocess import CalledProcessError, run
 from typing import Optional
 
 from flask import Flask, current_app, redirect, render_template_string, url_for
@@ -72,24 +72,31 @@ def preview():
     if path is None:
         return "n/a"
     stat = path.stat()
-    result = run(
-        [
-            "pandoc",
-            str(path),
-            "--katex=https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/",
-            "--metadata=pagetitle=preview",
-            "--to=html",
-        ],
-        check=True,
-        text=True,
-        capture_output=True,
-    )
-    return render_template_string(
-        card_template,
-        preview=result.stdout,
-        mtime=stat.st_mtime,
-        name=path.relative_to(current_app.config["watch_folder"]),
-    )
+    try:
+        result = run(
+            [
+                "pandoc",
+                str(path),
+                "--katex=https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/",
+                "--metadata=pagetitle=preview",
+                # to find images relative to the markdown file
+                f"--resource-path={path.parent}",
+                # embeds images, maybe more, but the whole katex js lib is not embedded
+                "--self-contained",
+                "--to=html",
+            ],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        return render_template_string(
+            card_template,
+            preview=result.stdout,
+            mtime=stat.st_mtime,
+            name=path.relative_to(current_app.config["watch_folder"]),
+        )
+    except CalledProcessError as e:
+        return e.stdout + e.stderr
 
 
 @app.route("/mtime")
