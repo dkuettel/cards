@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import click
 from tqdm import tqdm
 
 from cards.data.plain.documents import align_and_write_metas_to_disk, get_all_documents
@@ -37,6 +38,7 @@ def sync(token: str, deck_id: str, path: Path):
     diff.print_summary()
 
     if len(diff) > 0:
+        click.confirm("Continue?", abort=True)
         for state in tqdm(
             states_from_apply_diff(deck, state, diff), total=len(diff), desc="sync"
         ):

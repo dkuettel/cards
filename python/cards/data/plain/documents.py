@@ -6,6 +6,7 @@ from pathlib import Path
 from pprint import pprint
 from typing import Optional
 
+import click
 import pandoc
 
 from cards.tools import if_bearable
@@ -194,6 +195,7 @@ def align_and_write_metas_to_disk(docs: list[Document]) -> list[Document]:
     if count == 0:
         return docs
     print(f"Updating {count} documents with aligned meta headers.")
+    click.confirm("Continue?", abort=True)
 
     def f(doc: Document):
         if doc.is_meta_aligned():
