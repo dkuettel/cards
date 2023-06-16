@@ -4,6 +4,9 @@ from typing import Optional
 
 from flask import Flask, current_app, redirect, url_for
 
+template_path = Path(__file__).parent / "preview-template.html"
+template_path = template_path.absolute()
+
 app = Flask(__name__)
 
 
@@ -36,7 +39,7 @@ def preview():
                 # (otherwise it's a html sub-tree)
                 "--self-contained",
                 # adapted from 'pandoc -D html'
-                "--template=python/cards/preview-template.html",
+                f"--template={template_path}",
                 f"--variable=preview_name:{name}",
                 f"--variable=mtime:{stat.st_mtime}",
                 "--to=html",
