@@ -21,10 +21,9 @@ def sync():
 
 @cli.command()
 def preview():
-    from cards.preview import main
     from cards.config import Config
+    from cards.preview import main
+
     config = Config.from_default_file()
 
     main(config.sync.path)
-
-
