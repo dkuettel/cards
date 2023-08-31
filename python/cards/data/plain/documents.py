@@ -8,6 +8,7 @@ from typing import Optional
 
 import click
 import pandoc
+from tqdm import tqdm
 
 from cards.tools import if_bearable
 
@@ -187,7 +188,10 @@ def write_meta_to_disk(meta: MetaHeader, path: Path):
 
 
 def get_all_documents(base: Path) -> list[Document]:
-    return [Document.from_path(p) for p in base.rglob("*.md")]
+    return [
+        Document.from_path(p)
+        for p in tqdm(base.rglob("*.md"), desc="get all documents")
+    ]
 
 
 def align_and_write_metas_to_disk(docs: list[Document]) -> list[Document]:

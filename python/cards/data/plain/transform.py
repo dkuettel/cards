@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Optional
 
+from tqdm import tqdm
+
 from cards.data.plain.documents import Document, read_meta_from_disk, write_meta_to_disk
 from cards.mochi.deck import MochiCard
-from cards.mochi.state import NewMochiCard
+from cards.mochi.state import NewMochiCard, TargetMochiCard
 
 
-@dataclass
+@dataclass(frozen=True)
 class NewCardForward(NewMochiCard):
     content: str
     path: Path
@@ -17,13 +19,16 @@ class NewCardForward(NewMochiCard):
     def get_content(self) -> str:
         return self.content
 
+    def get_source_path(self) -> Path:
+        return self.path
+
     def update_on_disk(self, card_id: str):
         meta = read_meta_from_disk(self.path)
         meta = meta.with_id(card_id)
         write_meta_to_disk(meta, self.path)
 
 
-@dataclass
+@dataclass(frozen=True)
 class NewCardBackward(NewMochiCard):
     content: str
     path: Path
@@ -31,10 +36,25 @@ class NewCardBackward(NewMochiCard):
     def get_content(self) -> str:
         return self.content
 
+    def get_source_path(self) -> Path:
+        return self.path
+
     def update_on_disk(self, card_id: str):
         meta = read_meta_from_disk(self.path)
         meta = meta.with_reverse_id(card_id)
         write_meta_to_disk(meta, self.path)
+
+
+@dataclass(frozen=True)
+class TargetCard(TargetMochiCard):
+    card: MochiCard
+    source: Path
+
+    def get_card(self) -> MochiCard:
+        return self.card
+
+    def get_source_path(self) -> Path:
+        return self.source
 
 
 def get_new_cards_from_documents(docs: list[Document]) -> list[NewMochiCard]:
@@ -48,16 +68,25 @@ def get_new_cards_from_document(doc: Document) -> Iterator[NewMochiCard]:
         yield NewCardBackward(as_mochi_md(doc.reverse_md, doc.reverse_prompt), doc.path)
 
 
-def get_cards_from_documents(docs: list[Document]) -> list[MochiCard]:
-    return [c for doc in docs for c in get_cards_from_document(doc)]
+def get_cards_from_documents(docs: list[Document]) -> list[TargetMochiCard]:
+    return [
+        c
+        for doc in tqdm(docs, desc="cards from documents")
+        for c in get_cards_from_document(doc)
+    ]
 
 
-def get_cards_from_document(doc: Document) -> Iterator[MochiCard]:
+def get_cards_from_document(doc: Document) -> Iterator[TargetMochiCard]:
     if doc.meta.id is not None:
-        yield MochiCard(doc.meta.id, as_mochi_md(doc.md, doc.prompt))
+        yield TargetCard(
+            MochiCard(doc.meta.id, as_mochi_md(doc.md, doc.prompt)), doc.path
+        )
     if doc.meta.reverse_id is not None and doc.reverse_md is not None:
-        yield MochiCard(
-            doc.meta.reverse_id, as_mochi_md(doc.reverse_md, doc.reverse_prompt)
+        yield TargetCard(
+            MochiCard(
+                doc.meta.reverse_id, as_mochi_md(doc.reverse_md, doc.reverse_prompt)
+            ),
+            doc.path,
         )
 
 

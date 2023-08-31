@@ -28,11 +28,11 @@ def sync(token: str, deck_id: str, path: Path):
     documents = align_and_write_metas_to_disk(documents)
 
     new_cards = get_new_cards_from_documents(documents)
-    cards = get_cards_from_documents(documents)
+    target_cards = get_cards_from_documents(documents)
 
     # TODO have this local as well, when/how to rescan to be sure?
     state = {c.id: c for c in deck.list_cards()}
-    target = {c.id: c for c in cards}
+    target = {c.get_card().id: c for c in target_cards}
 
     diff = MochiDiff.from_targets(state, target, new_cards)
     diff.print_summary()

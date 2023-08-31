@@ -80,7 +80,10 @@ def list_cards(auth: HTTPBasicAuth, deck_id: Optional[str] = None) -> list[ApiCa
     params = {}
     if deck_id is not None:
         params["deck-id"] = deck_id
-    return [ApiCard.from_doc(doc) for doc in iterate_paged_docs(auth, url, params)]
+    return [
+        ApiCard.from_doc(doc)
+        for doc in tqdm(iterate_paged_docs(auth, url, params), desc="list cards")
+    ]
 
 
 def create_card(auth: HTTPBasicAuth, deck_id: str, content: str) -> ApiCard:
