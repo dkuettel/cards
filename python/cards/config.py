@@ -21,7 +21,7 @@ class Config:
 
     @classmethod
     def from_default_file(cls):
-        return from_toml(cls, Path(".config.toml").read_text())
+        return from_toml(cls, Path("config.toml").read_text())
 
 
 @serde
@@ -37,4 +37,4 @@ class Credentials:
 
     @classmethod
     def from_default_file(cls):
-        return from_toml(cls, Path(".credentials.toml").read_text())
+        return from_toml(cls, Path("credentials.toml").read_text())
