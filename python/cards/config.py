@@ -23,6 +23,10 @@ class Config:
     def from_default_file(cls):
         return from_toml(cls, Path("config.toml").read_text())
 
+    @classmethod
+    def from_test_file(cls):
+        return from_toml(cls, Path("test-config.toml").read_text())
+
 
 @serde
 @dataclass

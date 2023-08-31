@@ -27,3 +27,14 @@ def preview():
     config = Config.from_default_file()
 
     main(config.sync.path)
+
+
+@cli.command()
+def test():
+    from cards.config import Config, Credentials
+    from cards.sync import sync
+
+    config = Config.from_test_file()
+    credentials = Credentials.from_default_file()
+
+    sync(credentials.mochi.token, config.sync.deck_id, config.sync.path)
