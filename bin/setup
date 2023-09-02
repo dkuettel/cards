@@ -9,3 +9,29 @@ if [[ ! -e .venv ]]; then
 fi
 
 vv pip-sync python/requirements.txt
+
+# sudo apt install pandoc texlive texlive-full
+# probably dont need tex stuff then, if doing html
+# > pandoc test.md -o test.html
+# browser doesnt reload automatically
+# > pandoc test.md -o test.pdf
+# using pdflatex, local pdf okular does reload
+# works, but uses a full a4 paper or so, html was nicer in that respect
+# in the end a webserver that tells the browser to reload? then we can also easily load the most recent file?
+# ok but we are getting close to what the plugins would have done :/
+# plus pdf is ugly blocktext, who wants to read like that ...
+# > pandoc test.md --standalone --output=test.pdf
+# > pandoc test.md --katex -o test.html
+# katex is what mochi uses
+# > pandoc test.md --katex=https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/ -s -o test.html
+# should work very similarly
+# see https://github.com/KaTeX/KaTeX for newer versions
+# without --standalone it looks like it's embeddable
+# I could then put it in a small div for restricted width
+# > pandoc test.md --katex=https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/ --metadata pagetitle=test -s -o test.html
+# not sure if there is any title coming from markdown
+
+# also need npm install -g katex at some version for the katex dist libs
+
+# npm install -g katex worked
+# also need apt install pandoc?
