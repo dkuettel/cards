@@ -1,3 +1,3 @@
-from cards.cli import cli
+from cards.cli import app
 
-cli()
+app()

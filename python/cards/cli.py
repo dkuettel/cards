@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import click
+from typer import Typer
+
+app = Typer()
 
 
-@click.group()
-def cli():
-    pass
-
-
-@cli.command()
+@app.command()
 def sync():
     from cards.config import Config, Credentials
     from cards.sync import sync
@@ -19,7 +16,7 @@ def sync():
     sync(credentials.mochi.token, config.sync.deck_id, config.sync.path)
 
 
-@cli.command()
+@app.command()
 def preview():
     from cards.config import Config
     from cards.preview import main
@@ -30,7 +27,7 @@ def preview():
     main(config.sync.path)
 
 
-@cli.command()
+@app.command()
 def test():
     from cards.config import Config, Credentials
     from cards.sync import sync
