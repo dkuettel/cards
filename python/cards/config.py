@@ -27,6 +27,12 @@ class Config:
     def from_test_file(cls):
         return from_toml(cls, Path("test-config.toml").read_text())
 
+    @classmethod
+    def from_test_flag(cls, test: bool):
+        if test:
+            return cls.from_test_file()
+        return cls.from_default_file()
+
 
 @serde
 @dataclass
