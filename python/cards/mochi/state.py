@@ -60,6 +60,9 @@ class MochiDiff:
             for c in tqdm(local, "diff")
             if isinstance(c, ExistingMochiCard)
         }
+        assert len(local_by_id) == len(
+            [c for c in local if isinstance(c, ExistingMochiCard)]
+        ), "There seem to be duplicate ids."
         assert set(local_by_id) <= set(
             remote_by_id
         ), "We don't support remote deletion."
