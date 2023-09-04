@@ -39,20 +39,3 @@ def preview():
     config = Config.from_test_flag(state.test)
 
     main(config.sync.path)
-
-
-@app.command()
-def convert():
-    """convert plain to rich"""
-    from pathlib import Path
-
-    from cards.config import Config
-    from cards.data import plain
-
-    config = Config.from_test_flag(state.test)
-    docs = plain.get_all_documents(config.sync.path / "plain")
-    for doc in docs:
-        assert type(doc) is plain.PlainDocument
-        out = Path("./test-convert")
-        out.mkdir(exist_ok=True, parents=True)
-        doc.convert(out)

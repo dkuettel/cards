@@ -22,8 +22,6 @@ class Document(ABC):
 
 
 def get_all_documents(path: Path) -> list[Document]:
-    from cards.data import plain, rich
+    from cards.data import rich
 
-    return plain.get_all_documents(path / "plain") + rich.get_all_documents(
-        path / "rich"
-    )
+    return rich.get_all_documents(path / "rich")

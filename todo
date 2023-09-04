@@ -20,7 +20,7 @@ x also check local ids for sanity, no overlap!
         - that could even start vim, and then on exit run sync, or just sync that one we just edited
     x so we forget the better way to do the metadata in plain, keep old
         x just fix it so it works
-        o then make a transformer to rich
+        x then make a transformer to rich
         o and remove old code, rename rich to something normal
     - or alternatively, go with easy single files, and global images, why not, works almost the same
         - and local meta is kept in a simple json file
