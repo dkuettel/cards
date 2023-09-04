@@ -6,9 +6,11 @@ from pathlib import Path
 from typing import Iterable, Optional, final
 
 import click
+from serde.json import to_json
 from tqdm import tqdm
 
 from cards.data import Direction, Document
+from cards.data.rich import Meta
 from cards.markdown import Markdown
 from cards.mochi.api import ApiAttachment
 from cards.mochi.deck import MochiCard
@@ -83,6 +85,15 @@ class MetaHeader:
 @dataclass(frozen=True)
 class PlainDocument(Document):
     path: Path
+
+    def convert(self, out: Path):
+        out = out / self.path.stem
+        out.mkdir(exist_ok=True, parents=True)
+        meta = self.meta()
+        _, text = split_content(self.path.read_text())
+        (out / "content.md").write_text(text)
+        new_meta = Meta(meta.id, meta.reverse_id)
+        (out / "meta.json").write_text(to_json(new_meta))
 
     def sync_local_meta(self):
         if not (
