@@ -80,7 +80,7 @@ class Markdown:
             prompt = maybe_match_prompt(block)
             if prompt is None:
                 return block
-            return Para(Emph(prompt))
+            return Para([Emph(prompt)])
 
         question = [f(b) for b in question]
 
