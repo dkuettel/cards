@@ -3,51 +3,29 @@
 - for latex see https://katex.org/docs/supported.html
 
 todo:
-x make state diff more explicit, now I have a change and I'm not sure where
-x how can I run it against a test env, test deck? or complete test env? before I break something with adding images
-    x use a test config with a test base path and just one thing in there?
-    x a test deck and easy to manually delete everything in the end
-o finally add images and other media stuff
-    x also preview needs to be able to work with test-config. test-config is a global --test switch? or maybe preview doesnt care
-        x nice preview already works with image embedded
-    x folder rich, with content.md, mochi.json, and a media folder, as required by mochi with @media, for attachments
-    x is the mochi syntax the same as the real markdown, so I can preview locally
-        x sadly, the @media/something doesnt work in normal markdown, is it really needed on mochi side?
-        x oh wait, we can use a folder named "@media" on linux, so it's unified, but if we have to rename things anyway, it doesnt matter much
-    x all concrete pandoc parse elements are list-like
-        x so can we generically match on them, and on Image, to get all?
-        x and how to transform here, just recursively? functionally?
-    x how do we know if something changed
-        x before the full state was right there to compare
-        x now I would need the binary data as well, or is there a hash? I guess not :/
-        x so it will be hard to know if the image has changed
-        - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
-        x probably should check what we get back when we retrieve a card, full data, including image? then things are fine for now
-        x but need to produce stable names, or wait, we just allow nice names only? uuh or we hash into a name, then we also notice changes
-            x i want local names to be free and descriptive still
-    x in the new rich format, try to do less markdown kungfu, data separated
-        x how to separate reverseness and prompt stuff? literally say "prompt: ..."? still though requires parsing
-        x instead have a reverse.flag in folder, or a reverse symlink? or reverse.prompt? prompt.md and reverse-prompt.md?
-        x or prompts.md with two and --- between? requires parsing again; we want the prompt to be easy, single line, maybe not .md
-    - I implemented much now with lazyness, but that can mean some stuff might get done more than once
-        - stick with it? or maybe cached prop, or just load? not sure what is easier
-        - but basically it means much redundant data, which makes things look more complicated for sure
-        - cached prop or function isnt a bad idea then, just beware in case we do want to reload from disk ...
-- also check local ids for sanity, no overlap!
+- plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
+- I implemented much now with lazyness, but that can mean some stuff might get done more than once
+    - stick with it? or maybe cached prop, or just load? not sure what is easier
+    - but basically it means much redundant data, which makes things look more complicated for sure
+    - cached prop or function isnt a bad idea then, just beware in case we do want to reload from disk ...
+x also check local ids for sanity, no overlap!
 - "rich" is convenient in code, but plain could almost do it, pictures dont have to be there in one folder ...
-    - just the json in md is a bit bumpy, but maybe we can do it better?
-    o ah ok the big thing is really the round-trip, that's why I did it so complicated ...
-        - if we do it clean, we reformat, same as we have now configured in vim, so maybe just okay?
-        - but that's really the bumpy part, do we want that?
+    x just the json in md is a bit bumpy, but maybe we can do it better?
+    x ah ok the big thing is really the round-trip, that's why I did it so complicated ...
+        x if we do it clean, we reformat, same as we have now configured in vim, so maybe just okay?
+        x but that's really the bumpy part, do we want that?
     - so maybe we really go with rich, make it the new default, eventually even move things
     - it's solid and easy to understand, plus with tmux project we can have some easy bin/* stuff for new or so
         - or just part of `cards add 'something'` maybe to add a template
         - that could even start vim, and then on exit run sync, or just sync that one we just edited
-    o so we forget the better way to do the metadata in plain, keep old
-        - just fix it so it works
-        - then make a transformer to rich
-        - and remove old code, rename rich to something normal
-o how to deal with the mochi api class card
+    x so we forget the better way to do the metadata in plain, keep old
+        x just fix it so it works
+        o then make a transformer to rich
+        o and remove old code, rename rich to something normal
+    - or alternatively, go with easy single files, and global images, why not, works almost the same
+        - and local meta is kept in a simple json file
+        - and we have some `cards ...` things to make operations, dont even need full sync all the time
+- how to deal with the mochi api class card
     - there we need id, it's part of it (right?)
     - but at the same time, we often need a data structure that represent a full card, likely in mochi format
         - but we might not have an id then, optional could be done, but feels like we might have to write a lot of if code?
