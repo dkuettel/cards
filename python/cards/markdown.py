@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Callable
 
@@ -24,7 +25,10 @@ from pandoc.types import Para  # pyright: ignore
 from pandoc.types import Space  # pyright: ignore
 from pandoc.types import Str  # pyright: ignore
 
-from cards.data import Direction  # pyright: ignore
+
+class Direction(Enum):
+    forward = "forward"
+    backward = "backward"
 
 
 @dataclass
@@ -93,7 +97,9 @@ class Markdown:
         answer = [b for b in map(g, answer) if b is not None]
         return Markdown(question + [HorizontalRule()] + answer)
 
-    def with_rewritten_images(self, transform: Callable[[str], tuple[str, str]]) -> Markdown:
+    def with_rewritten_images(
+        self, transform: Callable[[str], tuple[str, str]]
+    ) -> Markdown:
         body = deepcopy(self.body)
         for block in pandoc.iter(body):
             match block:
