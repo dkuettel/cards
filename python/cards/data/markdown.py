@@ -55,13 +55,18 @@ def read_markdowns(base: Path) -> dict[Path, Markdown]:
 
 def read_meta(base: Path) -> dict[Path, Meta]:
     at = base / "meta.json"
-    if at.exists():
-        return from_json(dict[Path, Meta], at.read_text())
-    return {}
+    if not at.exists():
+        return {}
+    meta_str = from_json(dict[Path, Meta], at.read_text())
+    meta = {Path(p): m for p, m in meta_str.items()}
+    return meta
 
 
+# TODO we could work with absolute paths outside this boundary instead
+# and only convert when saving and loading?
 def write_meta(base: Path, meta: dict[Path, Meta]):
-    (base / "meta.json").write_text(to_json(meta))
+    meta_str = {str(p): m for p, m in meta.items()}
+    (base / "meta.json").write_text(to_json(meta_str))
 
 
 def get_synced_meta(
