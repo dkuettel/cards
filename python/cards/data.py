@@ -9,13 +9,13 @@ from serde.json import from_json, to_json
 from tqdm import tqdm
 
 from cards.markdown import Direction, Markdown
-from cards.mochi.api import ApiAttachment
+from cards.mochi.api import Attachment
 
 
 @dataclass
 class Card:
     content: str
-    attachments: list[ApiAttachment]
+    attachments: list[Attachment]
     path: Path
     direction: Direction
 
@@ -175,6 +175,6 @@ class Images:
         hash.update(local.read_bytes())
         return remote, hash.hexdigest()
 
-    def as_api_attachments(self) -> list[ApiAttachment]:
+    def as_api_attachments(self) -> list[Attachment]:
         # TODO we might also consider scaling the images?
-        return [ApiAttachment.from_file(k, v) for k, v in self.data.items()]
+        return [Attachment.from_file(k, v) for k, v in self.data.items()]

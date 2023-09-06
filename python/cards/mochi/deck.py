@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from requests.auth import HTTPBasicAuth
 
 from cards.mochi.api import (
-    ApiAttachment,
-    ApiCard,
+    Attachment,
+    Card,
     create_card,
     delete_card,
     list_cards,
@@ -21,18 +21,18 @@ from cards.mochi.api import (
 class MochiCard:
     id: str
     content: str
-    attachments: list[ApiAttachment]
+    attachments: list[Attachment]
 
     @classmethod
-    def from_api_card(cls, card: ApiCard):
+    def from_api_card(cls, card: Card):
         return cls(
             card.id,
             card.content,
             card.attachments,  # TODO mutability?
         )
 
-    def to_api_card(self, deck_id: str) -> ApiCard:
-        return ApiCard(
+    def to_api_card(self, deck_id: str) -> Card:
+        return Card(
             id=self.id,
             content=self.content,
             deck_id=deck_id,
@@ -63,6 +63,6 @@ class MochiDeck:
         api_card = update_card(self.auth, card.to_api_card(self.deck_id))
         return MochiCard.from_api_card(api_card)
 
-    def create_card(self, content: str, attachments: list[ApiAttachment]) -> MochiCard:
+    def create_card(self, content: str, attachments: list[Attachment]) -> MochiCard:
         api_card = create_card(self.auth, self.deck_id, content, attachments)
         return MochiCard.from_api_card(api_card)

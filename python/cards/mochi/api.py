@@ -1,25 +1,39 @@
 from __future__ import annotations
 
 from base64 import b64encode
-from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
-from typing import Iterator, Optional
+from typing import Iterator, Literal
 from uuid import uuid4
 
 import requests
+from pydantic import BaseModel, ConfigDict, Field
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
-
-from cards.tools import if_bearable
 
 
 def url_at(at: str) -> str:
     return f"https://app.mochi.cards/api/{at}"
 
 
-@dataclass(frozen=True)
-class ApiAttachment:
+def model_config():
+    return ConfigDict(
+        alias_generator=lambda x: x.replace("_", "-"),
+        strict=True,
+    )
+
+
+def to_post_body(m: Card | Attachment) -> dict:
+    return m.model_dump(by_alias=True)
+
+
+# TODO is there a better way to do it?
+# a subclass pollutes the namespace
+# and makes certain things impossible when it clashes with pydantic's own model_* methods ...
+# like clean dataclasses and an external function for load/save?
+class Attachment(BaseModel):
+    model_config = model_config()
+
     file_name: str
     content_type: str
     data: str
@@ -27,9 +41,9 @@ class ApiAttachment:
     @classmethod
     def from_bytes(cls, file_name: str, content_type: str, data: bytes):
         return cls(
-            file_name,
-            content_type,
-            b64encode(data).decode("utf-8"),
+            file_name=file_name,
+            content_type=content_type,
+            data=b64encode(data).decode("utf-8"),
         )
 
     @classmethod
@@ -47,62 +61,20 @@ class ApiAttachment:
             path.read_bytes(),
         )
 
-    @classmethod
-    def from_doc(cls, doc: dict):
-        return cls(
-            file_name=if_bearable(doc["file-name"], str),
-            content_type=if_bearable(doc["content-type"], str),
-            data=if_bearable(doc["data"], str),
-        )
 
-    def to_post_body(self) -> dict:
-        return {
-            "file-name": self.file_name,
-            "content-type": self.content_type,
-            "data": self.data,
-        }
+class Card(BaseModel):
+    model_config = model_config()
 
-
-@dataclass(frozen=True)
-class ApiCard:
     id: str
     content: str
     deck_id: str
-    attachments: list[ApiAttachment]
-
-    @classmethod
-    def from_doc(cls, doc: dict):
-        # TODO we dont support any cards with this (unused, and/or sync problems)
-        assert not doc.get("archived?", False)
-        assert not doc.get("trashed?", False)
-        assert not doc.get("review-reverse?", False)
-        assert doc.get("template-id", None) is None
-        # TODO try this other serialization/validation lib that is meant for this use-case?
-        id = if_bearable(doc.get("id"), str)
-        content = if_bearable(doc.get("content"), str)
-        deck_id = if_bearable(doc.get("deck-id"), str)
-        attachments = [
-            ApiAttachment.from_doc(i)
-            for i in if_bearable(doc.get("attachments", []), list)
-        ]
-        return cls(id, content, deck_id, attachments)
-
-    def to_post_body(self) -> dict:
-        # TODO not clear in updates, if an entry is missing, it means "leave as is"?
-        # note we do get the full new update card back, so at least we can be sure what's the new state for caching
-        return {
-            "content": self.content,
-            "deck-id": self.deck_id,
-            "attachments": [i.to_post_body() for i in self.attachments],
-        }
-
-    def with_content(self, content: str) -> ApiCard:
-        return ApiCard(
-            self.id,
-            content,
-            self.deck_id,
-            self.attachments,
-        )
+    attachments: list[Attachment] = Field(default_factory=list)
+    # TODO does pydantic understand that? aliases cannot be based on type I guess :/
+    # otherwise we load them and validate separately, probably better, here we just want to mirror the api
+    archived: Literal[False] = Field(default=False, alias="archived?")
+    trashed: Literal[False] = Field(default=False, alias="trashed?")
+    review_reverse: Literal[False] = Field(default=False, alias="review-reverse?")
+    template_id: Literal[None] = None
 
 
 def iterate_paged_docs(auth: HTTPBasicAuth, url: str, params: dict) -> Iterator[dict]:
@@ -123,44 +95,44 @@ def iterate_paged_docs(auth: HTTPBasicAuth, url: str, params: dict) -> Iterator[
         page_params["bookmark"] = bookmark
 
 
-def list_cards(auth: HTTPBasicAuth, deck_id: Optional[str] = None) -> list[ApiCard]:
+def list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> list[Card]:
     url = url_at("cards")
     params = {}
     if deck_id is not None:
         params["deck-id"] = deck_id
     return [
-        ApiCard.from_doc(doc)
+        Card(**doc)
         for doc in tqdm(iterate_paged_docs(auth, url, params), desc="list cards")
     ]
 
 
 def create_card(
-    auth: HTTPBasicAuth, deck_id: str, content: str, attachments: list[ApiAttachment]
-) -> ApiCard:
+    auth: HTTPBasicAuth, deck_id: str, content: str, attachments: list[Attachment]
+) -> Card:
     url = url_at("cards")
     body = {
         "deck-id": deck_id,
         "content": content,
-        "attachments": [i.to_post_body() for i in attachments],
+        "attachments": [to_post_body(i) for i in attachments],
     }
     response = requests.post(url, json=body, auth=auth)
     assert response.status_code == 200, response.text
-    return ApiCard.from_doc(response.json())
+    return Card(**response.json())
 
 
-def get_card(auth: HTTPBasicAuth, card_id: str) -> ApiCard:
+def get_card(auth: HTTPBasicAuth, card_id: str) -> Card:
     url = url_at(f"cards/{card_id}")
     response = requests.get(url, auth=auth)
     assert response.status_code == 200, response.text
-    return ApiCard.from_doc(response.json())
+    return Card(**response.json())
 
 
-def update_card(auth: HTTPBasicAuth, card: ApiCard) -> ApiCard:
+def update_card(auth: HTTPBasicAuth, card: Card) -> Card:
     url = url_at(f"cards/{card.id}")
-    body = card.to_post_body()
+    body = to_post_body(card)
     response = requests.post(url, json=body, auth=auth)
     assert response.status_code == 200, response.text
-    return ApiCard.from_doc(response.json())
+    return Card(**response.json())
 
 
 def delete_card(auth: HTTPBasicAuth, card_id: str):
@@ -186,7 +158,7 @@ def test_update_some(auth: HTTPBasicAuth, deck_id: str):
     cards = list_cards(auth, deck_id)
     card = cards[0]
     pprint(card)
-    card = card.with_content(card.content + f"\nchange {uuid4()}")
+    card.content = card.content + f"\nchange {uuid4()}"
     pprint(card)
     card = update_card(auth, card)
     pprint(card)
