@@ -4,26 +4,27 @@
 
 todo:
 - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
-- I implemented much now with lazyness, but that can mean some stuff might get done more than once
-    - stick with it? or maybe cached prop, or just load? not sure what is easier
-    - but basically it means much redundant data, which makes things look more complicated for sure
-    - cached prop or function isnt a bad idea then, just beware in case we do want to reload from disk ...
+x I implemented much now with lazyness, but that can mean some stuff might get done more than once
+    x stick with it? or maybe cached prop, or just load? not sure what is easier
+    x but basically it means much redundant data, which makes things look more complicated for sure
+    x cached prop or function isnt a bad idea then, just beware in case we do want to reload from disk ...
 x also check local ids for sanity, no overlap!
-- "rich" is convenient in code, but plain could almost do it, pictures dont have to be there in one folder ...
+x "rich" is convenient in code, but plain could almost do it, pictures dont have to be there in one folder ...
     x just the json in md is a bit bumpy, but maybe we can do it better?
     x ah ok the big thing is really the round-trip, that's why I did it so complicated ...
         x if we do it clean, we reformat, same as we have now configured in vim, so maybe just okay?
         x but that's really the bumpy part, do we want that?
-    - so maybe we really go with rich, make it the new default, eventually even move things
+    x so maybe we really go with rich, make it the new default, eventually even move things
     - it's solid and easy to understand, plus with tmux project we can have some easy bin/* stuff for new or so
         - or just part of `cards add 'something'` maybe to add a template
         - that could even start vim, and then on exit run sync, or just sync that one we just edited
     x so we forget the better way to do the metadata in plain, keep old
         x just fix it so it works
         x then make a transformer to rich
-        o and remove old code, rename rich to something normal
-    - or alternatively, go with easy single files, and global images, why not, works almost the same
-        - and local meta is kept in a simple json file
+        x and remove old code, rename rich to something normal
+        x if markdown source is the only for now, move it to data.py, no more init
+    x or alternatively, go with easy single files, and global images, why not, works almost the same
+        x and local meta is kept in a simple json file
         - and we have some `cards ...` things to make operations, dont even need full sync all the time
 - how to deal with the mochi api class card
     - there we need id, it's part of it (right?)
@@ -31,12 +32,13 @@ x also check local ids for sanity, no overlap!
         - but we might not have an id then, optional could be done, but feels like we might have to write a lot of if code?
 - backup? what if I make a mistake, content is never gone, but mochi review history is not yet backed up
 - really need to separate data and code, telescope files finds too much, or control that?
-- do some profiling, it's surprisingly slow, maybe rust could be fun after all, if easy way to handle markdown data
-    - from a quick profile run, it looks like pandoc is just not very fast, at least with the bindings here
+x do some profiling, it's surprisingly slow, maybe rust could be fun after all, if easy way to handle markdown data
+    x from a quick profile run, it looks like pandoc is just not very fast, at least with the bindings here
 - maybe see for dependency updates
 x switch to typer?
 - if we ever want our own ids, and mochi doesnt provide, we could use comment or invisible markdown to carry this, if it exists?
     - like the media/image names could carry a hash to detect changes and/or refer to ids
+- some easy parallel code could speed things up, design is very easy now
 
 design:
 - create card gives an id, we cannot control it
