@@ -1,9 +1,9 @@
-beartype
 debugpy
 flask
 ipdb
 ipython
 pandoc
+pydantic
 pyserde[toml]
 requests
 tqdm
