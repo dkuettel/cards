@@ -4,6 +4,7 @@
 
 todo:
 - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
+- try https://docs.pydantic.dev/2.0/ and remove manual beartype stuff?
 x I implemented much now with lazyness, but that can mean some stuff might get done more than once
     x stick with it? or maybe cached prop, or just load? not sure what is easier
     x but basically it means much redundant data, which makes things look more complicated for sure
