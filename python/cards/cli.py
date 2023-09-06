@@ -1,16 +1,9 @@
-from __future__ import annotations
-
-from dataclasses import dataclass
-
 from typer import Typer
 
 
-@dataclass
-class State:
+class state:
     test: bool = False
 
-
-state = State()
 
 app = Typer()
 
