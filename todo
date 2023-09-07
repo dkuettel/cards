@@ -4,7 +4,7 @@
 
 todo:
 - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
-- try https://docs.pydantic.dev/2.0/ and remove manual beartype stuff?
+x try https://docs.pydantic.dev/2.0/ and remove manual beartype stuff?
 x I implemented much now with lazyness, but that can mean some stuff might get done more than once
     x stick with it? or maybe cached prop, or just load? not sure what is easier
     x but basically it means much redundant data, which makes things look more complicated for sure
@@ -27,15 +27,23 @@ x "rich" is convenient in code, but plain could almost do it, pictures dont have
     x or alternatively, go with easy single files, and global images, why not, works almost the same
         x and local meta is kept in a simple json file
         - and we have some `cards ...` things to make operations, dont even need full sync all the time
-- how to deal with the mochi api class card
+o how to deal with the mochi api class card
+    o maybe the api.py thing can be made a bit more plain, less OO?
     - there we need id, it's part of it (right?)
     - but at the same time, we often need a data structure that represent a full card, likely in mochi format
         - but we might not have an id then, optional could be done, but feels like we might have to write a lot of if code?
-- backup? what if I make a mistake, content is never gone, but mochi review history is not yet backed up
+x backup? what if I make a mistake, content is never gone, but mochi review history is not yet backed up
+    x hm retrieve card (and maybe list card too) has "reviews"
+    x so pydantic ignores unknown arguments? can that be made more strict? wondering if there isnt something better
+    x review list of: {'date': {'date': '2023-07-07T00:00:00.000Z'}, 'due': {'date': '2023-07-09T00:00:00.000Z'}, 'interval': 1.75, 'remembered?': True, 'duration': 3}
+    x we dont have to necessarily understand it, but just save it for backup
+    x does it ever get truncated by mochi? should we just backup every snapshot, and not overwrite? better, easier, we might never need it ...
+        x review doesnt seem truncated in list cards
+    - when at it, also check if single card retrieve has the attachments (as also list might not contain reviews)
 - really need to separate data and code, telescope files finds too much, or control that?
 x do some profiling, it's surprisingly slow, maybe rust could be fun after all, if easy way to handle markdown data
     x from a quick profile run, it looks like pandoc is just not very fast, at least with the bindings here
-- maybe see for dependency updates
+x maybe see for dependency updates
 x switch to typer?
 - if we ever want our own ids, and mochi doesnt provide, we could use comment or invisible markdown to carry this, if it exists?
     - like the media/image names could carry a hash to detect changes and/or refer to ids
