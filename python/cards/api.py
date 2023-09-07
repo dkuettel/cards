@@ -1,15 +1,17 @@
+"""
+implement relevant parts of
+https://mochi.cards/docs/api/
+"""
+
 from __future__ import annotations
 
 from base64 import b64encode
 from pathlib import Path
-from pprint import pprint
-from typing import Iterator, Literal
-from uuid import uuid4
+from typing import Iterator
 
 import requests
 from pydantic import BaseModel, ConfigDict, Field
 from requests.auth import HTTPBasicAuth
-from tqdm import tqdm
 
 
 def url_at(at: str) -> str:
@@ -23,14 +25,10 @@ def model_config():
     )
 
 
-def to_post_body(m: Card | Attachment) -> dict:
+def body_from_model(m: BaseModel) -> dict:
     return m.model_dump(by_alias=True)
 
 
-# TODO is there a better way to do it?
-# a subclass pollutes the namespace
-# and makes certain things impossible when it clashes with pydantic's own model_* methods ...
-# like clean dataclasses and an external function for load/save?
 class Attachment(BaseModel):
     model_config = model_config()
 
@@ -69,12 +67,10 @@ class Card(BaseModel):
     content: str
     deck_id: str
     attachments: list[Attachment] = Field(default_factory=list)
-    # TODO does pydantic understand that? aliases cannot be based on type I guess :/
-    # otherwise we load them and validate separately, probably better, here we just want to mirror the api
-    archived: Literal[False] = Field(default=False, alias="archived?")
-    trashed: Literal[False] = Field(default=False, alias="trashed?")
-    review_reverse: Literal[False] = Field(default=False, alias="review-reverse?")
-    template_id: Literal[None] = None
+    archived: bool = Field(default=False, alias="archived?")
+    trashed: bool = Field(default=False, alias="trashed?")
+    review_reverse: bool = Field(default=False, alias="review-reverse?")
+    template_id: None | str = None
 
 
 def iterate_paged_docs(auth: HTTPBasicAuth, url: str, params: dict) -> Iterator[dict]:
@@ -95,47 +91,60 @@ def iterate_paged_docs(auth: HTTPBasicAuth, url: str, params: dict) -> Iterator[
         page_params["bookmark"] = bookmark
 
 
-def raw_list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> list[dict]:
+def raw_list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> Iterator[dict]:
     url = url_at("cards")
     params = {}
     if deck_id is not None:
         params["deck-id"] = deck_id
-    return [
-        doc for doc in tqdm(iterate_paged_docs(auth, url, params), desc="list cards")
-    ]
+    # TODO now deal with tqdm higher up, where we might have some len() estimate
+    return iterate_paged_docs(auth, url, params)
 
 
-def list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> list[Card]:
-    return [Card(**doc) for doc in raw_list_cards(auth, deck_id)]
+def list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> Iterator[Card]:
+    for doc in raw_list_cards(auth, deck_id):
+        yield Card(**doc)
+
+
+def raw_create_card(
+    auth: HTTPBasicAuth, deck_id: str, content: str, attachments: list[Attachment]
+) -> dict:
+    url = url_at("cards")
+    body = {
+        "deck-id": deck_id,
+        "content": content,
+        "attachments": [body_from_model(i) for i in attachments],
+    }
+    response = requests.post(url, json=body, auth=auth)
+    assert response.status_code == 200, response.text
+    return response.json()
 
 
 def create_card(
     auth: HTTPBasicAuth, deck_id: str, content: str, attachments: list[Attachment]
 ) -> Card:
-    url = url_at("cards")
-    body = {
-        "deck-id": deck_id,
-        "content": content,
-        "attachments": [to_post_body(i) for i in attachments],
-    }
-    response = requests.post(url, json=body, auth=auth)
-    assert response.status_code == 200, response.text
-    return Card(**response.json())
+    return Card(**raw_create_card(auth, deck_id, content, attachments))
 
 
-def get_card(auth: HTTPBasicAuth, card_id: str) -> Card:
+def raw_retrieve_card(auth: HTTPBasicAuth, card_id: str) -> dict:
     url = url_at(f"cards/{card_id}")
     response = requests.get(url, auth=auth)
     assert response.status_code == 200, response.text
-    return Card(**response.json())
+    return response.json()
+
+
+def retrieve_card(auth: HTTPBasicAuth, card_id: str) -> Card:
+    return Card(**raw_retrieve_card(auth, card_id))
+
+
+def raw_update_card(auth: HTTPBasicAuth, card: dict) -> dict:
+    url = url_at(f"cards/{card['id']}")
+    response = requests.post(url, json=card, auth=auth)
+    assert response.status_code == 200, response.text
+    return response.json()
 
 
 def update_card(auth: HTTPBasicAuth, card: Card) -> Card:
-    url = url_at(f"cards/{card.id}")
-    body = to_post_body(card)
-    response = requests.post(url, json=body, auth=auth)
-    assert response.status_code == 200, response.text
-    return Card(**response.json())
+    return Card(**raw_update_card(auth, body_from_model(card)))
 
 
 def delete_card(auth: HTTPBasicAuth, card_id: str):
@@ -143,47 +152,6 @@ def delete_card(auth: HTTPBasicAuth, card_id: str):
     response = requests.delete(url, auth=auth)
     assert response.status_code == 200, response.text
 
-
-def test_list_some(auth: HTTPBasicAuth, deck_id: str):
-    pprint(list_cards(auth, deck_id))
-
-
-def test_add_some(auth: HTTPBasicAuth, deck_id: str):
-    count = 20
-    # TODO I get about 1.5it/sec, so rate limited, even though it said 5it/sec in the doc? parallel could still help
-    # this might even work with threading, right?
-    for i in tqdm(range(count)):
-        c = create_card(auth, deck_id, f"({i:03d}) {uuid4()}", [])
-        pprint(c)
-
-
-def test_update_some(auth: HTTPBasicAuth, deck_id: str):
-    cards = list_cards(auth, deck_id)
-    card = cards[0]
-    pprint(card)
-    card.content = card.content + f"\nchange {uuid4()}"
-    pprint(card)
-    card = update_card(auth, card)
-    pprint(card)
-
-
-def test_retrieve_card(
-    auth: HTTPBasicAuth, deck_id: str = "7PK828fj", card_id: str = "Z5qXONkU"
-):
-
-    url = url_at(f"cards/{card_id}")
-    response = requests.get(url, auth=auth)
-    print(response.json())
-
-    url = url_at("cards")
-    params = {}
-    params["deck-id"] = deck_id
-    [card] = [
-        doc
-        for doc in tqdm(iterate_paged_docs(auth, url, params), desc="list cards")
-        if doc["id"] == card_id
-    ]
-    print(card)
 
 def auth_from_token(token: str) -> HTTPBasicAuth:
     return HTTPBasicAuth(token, "")

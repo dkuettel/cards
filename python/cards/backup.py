@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-from cards.mochi.api import auth_from_token, raw_list_cards
+from cards.api import auth_from_token, raw_list_cards
 
 
 def backup_deck(token: str, deck_id: str):

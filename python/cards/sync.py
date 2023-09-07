@@ -3,6 +3,7 @@ from pathlib import Path
 import click
 from tqdm import tqdm
 
+from cards.api import auth_from_token, list_cards
 from cards.data import (
     MetaDiff,
     get_cards,
@@ -11,13 +12,12 @@ from cards.data import (
     read_meta,
     write_meta,
 )
-from cards.mochi.deck import MochiDeck
-from cards.mochi.state import MochiDiff, states_from_apply_diff
+from cards.state import MochiDiff, states_from_apply_diff
 
 
 def sync(token: str, deck_id: str, path: Path):
 
-    deck = MochiDeck.from_token(deck_id, token)
+    auth = auth_from_token(token)
 
     markdowns = read_markdowns(path)
     meta = read_meta(path)
@@ -30,10 +30,23 @@ def sync(token: str, deck_id: str, path: Path):
         write_meta(path, synced_meta)
         meta = synced_meta
 
-    # TODO do we want to keep state, our best guess of remote?
-    # TODO we could have a guess for the count, and the a better tqdm, should we make things with yield, so that we do tqdm high up only?
-    remote = {c.id: c for c in deck.list_cards()}
     existing_cards, new_cards = get_cards(markdowns, meta)
+
+    # TODO do we want to keep state, our best guess of remote?
+    # TODO see if we can move all tqdm stuff high up here? so that the decision how/what to show is top-level
+    remote = {
+        c.id: c
+        for c in tqdm(
+            list_cards(auth, deck_id),
+            total=len(existing_cards),
+            desc="list cards",
+        )
+    }
+    for card in remote.values():
+        assert not card.archived
+        assert not card.trashed
+        assert not card.review_reverse
+        assert card.template_id is None
 
     diff = MochiDiff.from_states(remote, existing_cards, new_cards)
     diff.print_summary()
@@ -41,7 +54,7 @@ def sync(token: str, deck_id: str, path: Path):
     if diff.count() > 0:
         click.confirm("Continue?", abort=True)
         for state, meta in tqdm(
-            states_from_apply_diff(deck, remote, diff, meta),
+            states_from_apply_diff(auth, deck_id, remote, diff, meta),
             total=diff.count(),
             desc="sync",
         ):

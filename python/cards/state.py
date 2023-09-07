@@ -4,28 +4,41 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
+from requests.auth import HTTPBasicAuth
+
+from cards import api
 from cards.data import Card, Meta
-from cards.mochi.deck import MochiCard, MochiDeck
 
 
 def states_from_apply_diff(
-    deck: MochiDeck,
-    state: dict[str, MochiCard],
+    auth: HTTPBasicAuth,
+    deck_id: str,
+    state: dict[str, api.Card],
     diff: MochiDiff,
     meta: dict[Path, Meta],
-) -> Iterator[tuple[dict[str, MochiCard], dict[Path, Meta]]]:
+) -> Iterator[tuple[dict[str, api.Card], dict[Path, Meta]]]:
     for id, card in diff.changed.items():
-        u = deck.update_card(MochiCard(id, card.content, card.attachments))
+        # TODO or we want the raw call? because we keep the local state as generic jsons?
+        # unless we really make a wrapped layer around a cached kind of api?
+        u = api.update_card(
+            auth,
+            api.Card(
+                id=id,
+                content=card.content,
+                deck_id=deck_id,
+                attachments=card.attachments,
+            ),
+        )
         state[u.id] = u
         yield state, meta
 
     for card in diff.removed:
-        deck.delete_card(card.id)
+        api.delete_card(auth, card.id)
         state.pop(card.id)
         yield state, meta
 
     for card in diff.new:
-        u = deck.create_card(card.content, card.attachments)
+        u = api.create_card(auth, deck_id, card.content, card.attachments)
         meta[card.path].set_by_direction(card.direction, u.id)
         state[u.id] = u
         yield state, meta
@@ -34,13 +47,13 @@ def states_from_apply_diff(
 @dataclass
 class MochiDiff:
     changed: dict[str, Card]
-    removed: list[MochiCard]
+    removed: list[api.Card]
     new: list[Card]
 
     @classmethod
     def from_states(
         cls,
-        remote: dict[str, MochiCard],
+        remote: dict[str, api.Card],
         existing: dict[str, Card],
         new: list[Card],
     ):

@@ -2,95 +2,22 @@
 todo:
 - split data and code, make code public git
 - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
-x try https://docs.pydantic.dev/2.0/ and remove manual beartype stuff?
-x I implemented much now with lazyness, but that can mean some stuff might get done more than once
-    x stick with it? or maybe cached prop, or just load? not sure what is easier
-    x but basically it means much redundant data, which makes things look more complicated for sure
-    x cached prop or function isnt a bad idea then, just beware in case we do want to reload from disk ...
-x also check local ids for sanity, no overlap!
-x "rich" is convenient in code, but plain could almost do it, pictures dont have to be there in one folder ...
-    x just the json in md is a bit bumpy, but maybe we can do it better?
-    x ah ok the big thing is really the round-trip, that's why I did it so complicated ...
-        x if we do it clean, we reformat, same as we have now configured in vim, so maybe just okay?
-        x but that's really the bumpy part, do we want that?
-    x so maybe we really go with rich, make it the new default, eventually even move things
-    - it's solid and easy to understand, plus with tmux project we can have some easy bin/* stuff for new or so
-        - or just part of `cards add 'something'` maybe to add a template
-        - that could even start vim, and then on exit run sync, or just sync that one we just edited
-    x so we forget the better way to do the metadata in plain, keep old
-        x just fix it so it works
-        x then make a transformer to rich
-        x and remove old code, rename rich to something normal
-        x if markdown source is the only for now, move it to data.py, no more init
-    x or alternatively, go with easy single files, and global images, why not, works almost the same
-        x and local meta is kept in a simple json file
-        - and we have some `cards ...` things to make operations, dont even need full sync all the time
+- it's solid and easy to understand, plus with tmux project we can have some easy bin/* stuff for new or so
+    - or just part of `cards add 'something'` maybe to add a template
+    - that could even start vim, and then on exit run sync, or just sync that one we just edited
+    - and we have some `cards ...` things to make operations, dont even need full sync all the time
 o how to deal with the mochi api class card
     o maybe the api.py thing can be made a bit more plain, less OO?
     - there we need id, it's part of it (right?)
     - but at the same time, we often need a data structure that represent a full card, likely in mochi format
         - but we might not have an id then, optional could be done, but feels like we might have to write a lot of if code?
-x backup? what if I make a mistake, content is never gone, but mochi review history is not yet backed up
-    x hm retrieve card (and maybe list card too) has "reviews"
-    x so pydantic ignores unknown arguments? can that be made more strict? wondering if there isnt something better
-    x review list of: {'date': {'date': '2023-07-07T00:00:00.000Z'}, 'due': {'date': '2023-07-09T00:00:00.000Z'}, 'interval': 1.75, 'remembered?': True, 'duration': 3}
-    x we dont have to necessarily understand it, but just save it for backup
-    x does it ever get truncated by mochi? should we just backup every snapshot, and not overwrite? better, easier, we might never need it ...
-        x review doesnt seem truncated in list cards
-    - when at it, also check if single card retrieve has the attachments (as also list might not contain reviews)
+- when at it, also check if single card retrieve has the attachments (as also list might not contain reviews)
 - really need to separate data and code, telescope files finds too much, or control that?
-x do some profiling, it's surprisingly slow, maybe rust could be fun after all, if easy way to handle markdown data
-    x from a quick profile run, it looks like pandoc is just not very fast, at least with the bindings here
-x maybe see for dependency updates
-x switch to typer?
-- if we ever want our own ids, and mochi doesnt provide, we could use comment or invisible markdown to carry this, if it exists?
-    - like the media/image names could carry a hash to detect changes and/or refer to ids
 - some easy parallel code could speed things up, design is very easy now
 
-design:
-x create card gives an id, we cannot control it
-x how do we sync things correctly then? we record the id, change our documents?
-x or we add an additional field unused for displaying and control the id ourselves?
-x either way, I want to edit my notes and I dont want to create ids, or maybe not even see them (?)
-x but we kinda need it with the text, so it moves as I move things
-x we cannot currently control the events stuff, so we cannot lose and re-introduce a card without losing history
-    x btw, need to make regular backups eventually
-x whats a good format for me locally then
-    x yaml with long text? not so much formatting then
-    x one use case is just a list of random things, like the ones exported from brainscape for now
-        x do I want to use decks? do I map them to folders maybe?
-        x a .json file or so per folder to identify the deck for mochi
-        x pretty much just directly the mochi-style content, with markup style
-        x and the id is in a parallel json file? or added to the first line, and then stripped?
-        x how to deal with other content, files like images? in a parallel .files folder?
-        x useful if relatively shaped so that it also works with a markdown viewer locally
-    x or we overall just go with markdowns? could even have the "long texts" there for reading?
-        x for direct cards seems fine really, just the question is how to track the id
-        x the online editor is quite nice, should I really manage it locally and sync?
-        x actually the editor is not special, the rendered view is disconnected
-x do I need content when a card has a template?!
-x how to make sure sync information stays with the source of truth?
-    x in the file would be most safe
-    x a similar .file or something could get lost
-    x or a card is a folder, then you move whole folders, but seems a bit heavy?
-    x make it part of markdown somehow, plus allow the same substructure when doing larger documents?
-x how to handle the full documents and connected cards?
-    x generally write a document, as I used to, for my own reading
-    x intersperse cards somehow, and/or subfolder with related things
-    x could there be a way for us to not repeat ourselves? like mark pieces as cards and keep it as text anyway?
-    x whatever we do inline, it has to be full markdown again, right? ok we dont necessarily need the full power again
-        x a bit difficult because it uses pages, and that's pretty high level, not very nestable
-    x maybe only support certain templates as interspersed with some proprietary syntax?
-        x still annoying that I have to do the parsing, and keep track of the card ids then
-        x use '->' and it becomes '-{id}>' when synced?
-    x something that literally links to the restapi cards/id thing would be nicely consistent, and new ones I dont add the id stuff yet?
-    x just need to mark start and end, and maybe allow different things
-        x the full thing
-        x but also just a templated one, q and a?
-    x given mochi is markdown, I just dont want to get away from it too far, so
-        x how to expose easy templates
-        x how to embed a card
-        x do we need both, or do something in separate files?
+notes:
+- if we ever want our own ids, and mochi doesnt provide, we could use comment or invisible markdown to carry this, if it exists?
+    - like the media/image names could carry a hash to detect changes and/or refer to ids
 
 see:
 - for latex https://katex.org/docs/supported.html

@@ -8,10 +8,11 @@ from serde import serde
 from serde.json import from_json, to_json
 from tqdm import tqdm
 
+from cards.api import Attachment
 from cards.markdown import Direction, Markdown
-from cards.mochi.api import Attachment
 
 
+# TODO same name as api.Card ... can we have a better name here?
 @dataclass
 class Card:
     content: str
