@@ -1,8 +1,6 @@
 
-- split data and code, make code public git
-- for latex see https://katex.org/docs/supported.html
-
 todo:
+- split data and code, make code public git
 - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
 x try https://docs.pydantic.dev/2.0/ and remove manual beartype stuff?
 x I implemented much now with lazyness, but that can mean some stuff might get done more than once
@@ -50,51 +48,53 @@ x switch to typer?
 - some easy parallel code could speed things up, design is very easy now
 
 design:
-- create card gives an id, we cannot control it
-- how do we sync things correctly then? we record the id, change our documents?
-- or we add an additional field unused for displaying and control the id ourselves?
-- either way, I want to edit my notes and I dont want to create ids, or maybe not even see them (?)
-- but we kinda need it with the text, so it moves as I move things
-- we cannot currently control the events stuff, so we cannot lose and re-introduce a card without losing history
-    - btw, need to make regular backups eventually
-- whats a good format for me locally then
-    - yaml with long text? not so much formatting then
-    - one use case is just a list of random things, like the ones exported from brainscape for now
-        - do I want to use decks? do I map them to folders maybe?
-        - a .json file or so per folder to identify the deck for mochi
-        - pretty much just directly the mochi-style content, with markup style
-        - and the id is in a parallel json file? or added to the first line, and then stripped?
-        - how to deal with other content, files like images? in a parallel .files folder?
-        - useful if relatively shaped so that it also works with a markdown viewer locally
-    - or we overall just go with markdowns? could even have the "long texts" there for reading?
-        - for direct cards seems fine really, just the question is how to track the id
-        - the online editor is quite nice, should I really manage it locally and sync?
-        - actually the editor is not special, the rendered view is disconnected
-- do I need content when a card has a template?!
-o how to make sure sync information stays with the source of truth?
-    - in the file would be most safe
-    - a similar .file or something could get lost
-    - or a card is a folder, then you move whole folders, but seems a bit heavy?
-    - make it part of markdown somehow, plus allow the same substructure when doing larger documents?
-o how to handle the full documents and connected cards?
-    - generally write a document, as I used to, for my own reading
-    - intersperse cards somehow, and/or subfolder with related things
-    - could there be a way for us to not repeat ourselves? like mark pieces as cards and keep it as text anyway?
-    - whatever we do inline, it has to be full markdown again, right? ok we dont necessarily need the full power again
-        - a bit difficult because it uses pages, and that's pretty high level, not very nestable
-    - maybe only support certain templates as interspersed with some proprietary syntax?
-        - still annoying that I have to do the parsing, and keep track of the card ids then
-        - use '->' and it becomes '-{id}>' when synced?
-    - something that literally links to the restapi cards/id thing would be nicely consistent, and new ones I dont add the id stuff yet?
-    - just need to mark start and end, and maybe allow different things
-        - the full thing
-        - but also just a templated one, q and a?
-    - given mochi is markdown, I just dont want to get away from it too far, so
-        - how to expose easy templates
-        - how to embed a card
-        - do we need both, or do something in separate files?
-o see
-    - https://www.markdownguide.org/cheat-sheet/
-    - https://markdownlivepreview.com/
-    - https://mochi.cards/docs/api/#create-a-card
-    - https://pandoc.org/
+x create card gives an id, we cannot control it
+x how do we sync things correctly then? we record the id, change our documents?
+x or we add an additional field unused for displaying and control the id ourselves?
+x either way, I want to edit my notes and I dont want to create ids, or maybe not even see them (?)
+x but we kinda need it with the text, so it moves as I move things
+x we cannot currently control the events stuff, so we cannot lose and re-introduce a card without losing history
+    x btw, need to make regular backups eventually
+x whats a good format for me locally then
+    x yaml with long text? not so much formatting then
+    x one use case is just a list of random things, like the ones exported from brainscape for now
+        x do I want to use decks? do I map them to folders maybe?
+        x a .json file or so per folder to identify the deck for mochi
+        x pretty much just directly the mochi-style content, with markup style
+        x and the id is in a parallel json file? or added to the first line, and then stripped?
+        x how to deal with other content, files like images? in a parallel .files folder?
+        x useful if relatively shaped so that it also works with a markdown viewer locally
+    x or we overall just go with markdowns? could even have the "long texts" there for reading?
+        x for direct cards seems fine really, just the question is how to track the id
+        x the online editor is quite nice, should I really manage it locally and sync?
+        x actually the editor is not special, the rendered view is disconnected
+x do I need content when a card has a template?!
+x how to make sure sync information stays with the source of truth?
+    x in the file would be most safe
+    x a similar .file or something could get lost
+    x or a card is a folder, then you move whole folders, but seems a bit heavy?
+    x make it part of markdown somehow, plus allow the same substructure when doing larger documents?
+x how to handle the full documents and connected cards?
+    x generally write a document, as I used to, for my own reading
+    x intersperse cards somehow, and/or subfolder with related things
+    x could there be a way for us to not repeat ourselves? like mark pieces as cards and keep it as text anyway?
+    x whatever we do inline, it has to be full markdown again, right? ok we dont necessarily need the full power again
+        x a bit difficult because it uses pages, and that's pretty high level, not very nestable
+    x maybe only support certain templates as interspersed with some proprietary syntax?
+        x still annoying that I have to do the parsing, and keep track of the card ids then
+        x use '->' and it becomes '-{id}>' when synced?
+    x something that literally links to the restapi cards/id thing would be nicely consistent, and new ones I dont add the id stuff yet?
+    x just need to mark start and end, and maybe allow different things
+        x the full thing
+        x but also just a templated one, q and a?
+    x given mochi is markdown, I just dont want to get away from it too far, so
+        x how to expose easy templates
+        x how to embed a card
+        x do we need both, or do something in separate files?
+
+see:
+- for latex https://katex.org/docs/supported.html
+- https://www.markdownguide.org/cheat-sheet/
+- https://markdownlivepreview.com/
+- https://mochi.cards/docs/api/#create-a-card
+- https://pandoc.org/
