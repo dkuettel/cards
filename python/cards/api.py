@@ -155,15 +155,3 @@ def delete_card(auth: HTTPBasicAuth, card_id: str):
 
 def auth_from_token(token: str) -> HTTPBasicAuth:
     return HTTPBasicAuth(token, "")
-
-
-if __name__ == "__main__":
-    from cards.config import Credentials
-
-    credentials = Credentials.from_default_file()
-    auth = HTTPBasicAuth(credentials.mochi.token, "")
-    deck_id = "-"
-    # test_list_some(auth, deck_id)
-    # test_add_some(auth, deck_id)
-    # test_update_some(auth, deck_id)
-    test_retrieve_card(auth)
