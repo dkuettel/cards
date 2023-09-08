@@ -95,15 +95,18 @@ def iterate_paged_docs(auth: HTTPBasicAuth, url: str, params: dict) -> Iterator[
         page_params["bookmark"] = bookmark
 
 
-def list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> list[Card]:
+def raw_list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> list[dict]:
     url = url_at("cards")
     params = {}
     if deck_id is not None:
         params["deck-id"] = deck_id
     return [
-        Card(**doc)
-        for doc in tqdm(iterate_paged_docs(auth, url, params), desc="list cards")
+        doc for doc in tqdm(iterate_paged_docs(auth, url, params), desc="list cards")
     ]
+
+
+def list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> list[Card]:
+    return [Card(**doc) for doc in raw_list_cards(auth, deck_id)]
 
 
 def create_card(
@@ -164,12 +167,35 @@ def test_update_some(auth: HTTPBasicAuth, deck_id: str):
     pprint(card)
 
 
+def test_retrieve_card(
+    auth: HTTPBasicAuth, deck_id: str = "7PK828fj", card_id: str = "Z5qXONkU"
+):
+
+    url = url_at(f"cards/{card_id}")
+    response = requests.get(url, auth=auth)
+    print(response.json())
+
+    url = url_at("cards")
+    params = {}
+    params["deck-id"] = deck_id
+    [card] = [
+        doc
+        for doc in tqdm(iterate_paged_docs(auth, url, params), desc="list cards")
+        if doc["id"] == card_id
+    ]
+    print(card)
+
+def auth_from_token(token: str) -> HTTPBasicAuth:
+    return HTTPBasicAuth(token, "")
+
+
 if __name__ == "__main__":
     from cards.config import Credentials
 
     credentials = Credentials.from_default_file()
     auth = HTTPBasicAuth(credentials.mochi.token, "")
-    deck_id = "-"  # api-test
-    test_list_some(auth, deck_id)
+    deck_id = "-"
+    # test_list_some(auth, deck_id)
     # test_add_some(auth, deck_id)
     # test_update_some(auth, deck_id)
+    test_retrieve_card(auth)

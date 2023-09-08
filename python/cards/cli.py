@@ -32,3 +32,15 @@ def preview():
     config = Config.from_test_flag(state.test)
 
     main(config.sync.path)
+
+
+@app.command()
+def backup():
+    """backup all cards of the default deck, raw, as json"""
+    from cards.backup import backup_deck
+    from cards.config import Config, Credentials
+
+    config = Config.from_test_flag(state.test)
+    credentials = Credentials.from_default_file()
+
+    backup_deck(credentials.mochi.token, config.sync.deck_id)
