@@ -6,7 +6,7 @@ todo:
     - or just part of `cards add 'something'` maybe to add a template
     - that could even start vim, and then on exit run sync, or just sync that one we just edited
     - and we have some `cards ...` things to make operations, dont even need full sync all the time
-- when at it, also check if single card retrieve has the attachments (as also list might not contain reviews)
+o when at it, also check if single card retrieve has the attachments (as also list might not contain reviews)
 - really need to separate data and code, telescope files finds too much, or control that?
 - some easy parallel code could speed things up, design is very easy now
 
@@ -16,7 +16,8 @@ notes:
 
 see:
 - for latex https://katex.org/docs/supported.html
-- https://www.markdownguide.org/cheat-sheet/
-- https://markdownlivepreview.com/
-- https://mochi.cards/docs/api/#create-a-card
-- https://pandoc.org/
+- api https://mochi.cards/docs/api
+- markdown
+    - https://www.markdownguide.org/cheat-sheet/
+    - https://markdownlivepreview.com/
+    - https://pandoc.org/
