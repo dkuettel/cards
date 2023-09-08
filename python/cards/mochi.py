@@ -101,6 +101,14 @@ def create_card(authentication: Authentication, new_card: NewCard) -> Card:
     return Card.from_dict(response.json())
 
 
+def get_card(authentication: Authentication, card_id: str) -> Card:
+    url = f"https://app.mochi.cards/api/cards/{card_id}"
+    auth = HTTPBasicAuth(authentication.token, "")
+    response = requests.get(url, auth=auth)
+    assert response.status_code == 200, response.text
+    return Card.from_dict(response.json())
+
+
 def update_card(authentication: Authentication, card: Card) -> Card:
     # TODO not clear in updates, if an entry is missing, it means "leaves as is"?
     # note we do get the full new update card back, so at least we can be sure what's the new state for caching
@@ -144,7 +152,16 @@ def test_update_some():
     pprint(card)
 
 
+def test_get_some():
+    # card_id = "-"  # manual
+    card_id = "-"  # auto
+    authentication = Authentication("-")
+    card = get_card(authentication, card_id)
+    print(card.content)
+
+
 if __name__ == "__main__":
     # test_list_some()
-    test_add_some()
+    # test_add_some()
     # test_update_some()
+    test_get_some()
