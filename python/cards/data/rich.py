@@ -1,30 +1,24 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, final
 
+# TODO use typer
+import click
 from serde import serde
 from serde.json import from_json, to_json
 from tqdm import tqdm
 
-from cards.data import Direction
+from cards.data import Direction, Document
 from cards.markdown import Markdown
 from cards.mochi.api import ApiAttachment
 from cards.mochi.deck import MochiCard
 from cards.mochi.state import ExistingMochiCard, NewMochiCard
 
 
-# TODO could that be the interface between data sources (on disk) and mochi state / cards ?
-# (the returns have a callback for writing meta data)
-class Document(ABC):
-    @abstractmethod
-    def get_mochi_cards(self) -> Iterable[ExistingMochiCard | NewMochiCard]:
-        pass
-
-
+@final
 @dataclass
 class ExistingCard(ExistingMochiCard):
     id: str
@@ -43,6 +37,7 @@ class ExistingCard(ExistingMochiCard):
         return self.doc.base
 
 
+@final
 @dataclass
 class NewCard(NewMochiCard):
     doc: RichDocument
@@ -59,9 +54,19 @@ class NewCard(NewMochiCard):
         self.doc.write_meta_id(self.direction, id)
 
 
+@final
 @dataclass
 class RichDocument(Document):
     base: Path
+
+    def sync_local_meta(self):
+        if not (
+            not self.content().has_reverse_prompt() and self.meta().backward is not None
+        ):
+            return
+        print(f"Remove backward id from {self.base}.")
+        click.confirm("Continue?", abort=True)
+        self.write_meta_id(Direction.backward, None)
 
     def get_mochi_cards(self) -> Iterable[ExistingMochiCard | NewMochiCard]:
         doc = self.content()
@@ -122,7 +127,7 @@ class RichDocument(Document):
         content = content.with_rewritten_images(images.collect)
         return content.as_mochi_md_str(), images.as_api_attachments()
 
-    def write_meta_id(self, direction: Direction, id: str):
+    def write_meta_id(self, direction: Direction, id: None | str):
         meta = self.meta()
         match direction:
             case Direction.forward:
@@ -140,7 +145,7 @@ class Meta:
     backward: None | str = None
 
 
-def get_all_rich_documents(base: Path) -> list[Document]:
+def get_all_documents(base: Path) -> list[Document]:
     return [
         RichDocument(p.parent)
         for p in tqdm(base.glob("*/content.md"), desc="get all rich documents")

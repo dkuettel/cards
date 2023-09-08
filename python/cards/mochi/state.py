@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
+from tqdm import tqdm
+
 from cards.mochi.api import ApiAttachment
 from cards.mochi.deck import MochiCard, MochiDeck
 
@@ -55,7 +57,7 @@ class MochiDiff:
         local_by_id = {
             # TODO match here is proably cleaner in the end? for later mistakes
             c.get_mochi_card().id: c
-            for c in local
+            for c in tqdm(local, "diff")
             if isinstance(c, ExistingMochiCard)
         }
         assert set(local_by_id) <= set(
@@ -68,9 +70,10 @@ class MochiDiff:
         for card in remote:
             if card.id not in local_by_id:
                 removed.append(card)
-        for card in local:
+        for card in tqdm(local, desc="diff"):
             match card:
                 case ExistingMochiCard():
+                    # TODO we already have it in this function, but even more globaly we could think about speed here
                     mc = card.get_mochi_card()
                     # TODO not very happy here with how we compare == and !=
                     # this logic is "deep" because of how we create content and images
