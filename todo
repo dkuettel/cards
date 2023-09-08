@@ -6,11 +6,11 @@ todo:
     - or just part of `cards add 'something'` maybe to add a template
     - that could even start vim, and then on exit run sync, or just sync that one we just edited
     - and we have some `cards ...` things to make operations, dont even need full sync all the time
-o how to deal with the mochi api class card
-    o maybe the api.py thing can be made a bit more plain, less OO?
-    - there we need id, it's part of it (right?)
-    - but at the same time, we often need a data structure that represent a full card, likely in mochi format
-        - but we might not have an id then, optional could be done, but feels like we might have to write a lot of if code?
+x how to deal with the mochi api class card
+    x maybe the api.py thing can be made a bit more plain, less OO?
+    x there we need id, it's part of it (right?)
+    x but at the same time, we often need a data structure that represent a full card, likely in mochi format
+        x but we might not have an id then, optional could be done, but feels like we might have to write a lot of if code?
 - when at it, also check if single card retrieve has the attachments (as also list might not contain reviews)
 - really need to separate data and code, telescope files finds too much, or control that?
 - some easy parallel code could speed things up, design is very easy now
