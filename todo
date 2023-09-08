@@ -4,11 +4,47 @@
 
 todo:
 x make state diff more explicit, now I have a change and I'm not sure where
-- finally add images and other media stuff
+x how can I run it against a test env, test deck? or complete test env? before I break something with adding images
+    x use a test config with a test base path and just one thing in there?
+    x a test deck and easy to manually delete everything in the end
+o finally add images and other media stuff
+    - also preview needs to be able to work with test-config. test-config is a global --test switch? or maybe preview doesnt care
+        x nice preview already works with image embedded
+    - folder rich, with content.md, mochi.json, and a media folder, as required by mochi with @media, for attachments
     - is the mochi syntax the same as the real markdown, so I can preview locally
+        - sadly, the @media/something doesnt work in normal markdown, is it really needed on mochi side?
+        - oh wait, we can use a folder named "@media" on linux, so it's unified, but if we have to rename things anyway, it doesnt matter much
+    - all concrete pandoc parse elements are list-like
+        - so can we generically match on them, and on Image, to get all?
+        - and how to transform here, just recursively? functionally?
+    - how do we know if something changed
+        - before the full state was right there to compare
+        - now I would need the binary data as well, or is there a hash? I guess not :/
+        - so it will be hard to know if the image has changed
+        - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
+        - probably should check what we get back when we retrieve a card, full data, including image? then things are fine for now
+        - but need to produce stable names, or wait, we just allow nice names only? uuh or we hash into a name, then we also notice changes
+            - i want local names to be free and descriptive still
+    - in the new rich format, try to do less markdown kungfu, data separated
+        - how to separate reverseness and prompt stuff? literally say "prompt: ..."? still though requires parsing
+        - instead have a reverse.flag in folder, or a reverse symlink? or reverse.prompt? prompt.md and reverse-prompt.md?
+        - or prompts.md with two and --- between? requires parsing again; we want the prompt to be easy, single line, maybe not .md
+    - I implemented much now with lazyness, but that can mean some stuff might get done more than once
+        - stick with it? or maybe cached prop, or just load? not sure what is easier
+        - but basically it means much redundant data, which makes things look more complicated for sure
+        - cached prop or function isnt a bad idea then, just beware in case we do want to reload from disk ...
+o how to deal with the mochi api class card
+    - there we need id, it's part of it (right?)
+    - but at the same time, we often need a data structure that represent a full card, likely in mochi format
+        - but we might not have an id then, optional could be done, but feels like we might have to write a lot of if code?
 - backup? what if I make a mistake, content is never gone, but mochi review history is not yet backed up
+- really need to separate data and code, telescop files finds too much, or control that?
 - do some profiling, it's surprisingly slow, maybe rust could be fun after all, if easy way to handle markdown data
+    - from a quick profile run, it looks like pandoc is just not very fast, at least with the bindings here
+- maybe see for dependency updates
 - switch to typer?
+- if we ever want our own ids, and mochi doesnt provide, we could use comment or invisible markdown to carry this, if it exists?
+    - like the media/image names could carry a hash to detect changes and/or refer to ids
 
 design:
 - create card gives an id, we cannot control it

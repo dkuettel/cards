@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from base64 import b64encode
 from dataclasses import dataclass
+from pathlib import Path
 from pprint import pprint
 from typing import Iterator, Optional
 from uuid import uuid4
@@ -17,33 +19,81 @@ def url_at(at: str) -> str:
 
 
 @dataclass(frozen=True)
+class ApiAttachment:
+    file_name: str
+    content_type: str
+    data: str
+
+    @classmethod
+    def from_bytes(cls, file_name: str, content_type: str, data: bytes):
+        return cls(
+            file_name,
+            content_type,
+            b64encode(data).decode("utf-8"),
+        )
+
+    @classmethod
+    def from_file(cls, file_name: str, path: Path):
+        match path.suffix:
+            case ".png":
+                content_type = "image/png"
+            case ".jpg" | ".jpeg":
+                content_type = "image/jpeg"
+            case _:
+                assert False, path
+        return cls.from_bytes(
+            file_name,
+            content_type,
+            path.read_bytes(),
+        )
+
+    @classmethod
+    def from_doc(cls, doc: dict):
+        return cls(
+            file_name=if_bearable(doc["file-name"], str),
+            content_type=if_bearable(doc["content-type"], str),
+            data=if_bearable(doc["data"], str),
+        )
+
+    def to_post_body(self) -> dict:
+        return {
+            "file-name": self.file_name,
+            "content-type": self.content_type,
+            "data": self.data,
+        }
+
+
+@dataclass(frozen=True)
 class ApiCard:
     id: str
     content: str
     deck_id: str
-    template_id: Optional[str]
-    archived: bool
-    review_reverse: bool
+    attachments: list[ApiAttachment]
 
     @classmethod
     def from_doc(cls, doc: dict):
+        # TODO we dont support any cards with this (unused, and/or sync problems)
+        assert not doc.get("archived?", False)
+        assert not doc.get("trashed?", False)
+        assert not doc.get("review-reverse?", False)
+        assert doc.get("template-id", None) is None
+        # TODO try this other serialization/validation lib that is meant for this use-case?
         id = if_bearable(doc.get("id"), str)
         content = if_bearable(doc.get("content"), str)
         deck_id = if_bearable(doc.get("deck-id"), str)
-        template_id = if_bearable(doc.get("template-id", None), Optional[str])
-        archived = if_bearable(doc.get("archived?", False), bool)
-        review_reverse = if_bearable(doc.get("review-reverse?", False), bool)
-        return cls(id, content, deck_id, template_id, archived, review_reverse)
+        attachments = [
+            ApiAttachment.from_doc(i)
+            for i in if_bearable(doc.get("attachments", []), list)
+        ]
+        return cls(id, content, deck_id, attachments)
 
     def to_post_body(self) -> dict:
-        # TODO not clear in updates, if an entry is missing, it means "leaves as is"?
+        # TODO not clear in updates, if an entry is missing, it means "leave as is"?
         # note we do get the full new update card back, so at least we can be sure what's the new state for caching
         return {
             "content": self.content,
             "deck-id": self.deck_id,
-            "template-id": self.template_id,
-            "archived?": self.archived,
-            "review-reverse?": self.review_reverse,
+            "attachments": [i.to_post_body() for i in self.attachments],
         }
 
     def with_content(self, content: str) -> ApiCard:
@@ -51,9 +101,7 @@ class ApiCard:
             self.id,
             content,
             self.deck_id,
-            self.template_id,
-            self.archived,
-            self.review_reverse,
+            self.attachments,
         )
 
 
@@ -86,9 +134,15 @@ def list_cards(auth: HTTPBasicAuth, deck_id: Optional[str] = None) -> list[ApiCa
     ]
 
 
-def create_card(auth: HTTPBasicAuth, deck_id: str, content: str) -> ApiCard:
+def create_card(
+    auth: HTTPBasicAuth, deck_id: str, content: str, attachments: list[ApiAttachment]
+) -> ApiCard:
     url = url_at("cards")
-    body = {"deck-id": deck_id, "content": content}
+    body = {
+        "deck-id": deck_id,
+        "content": content,
+        "attachments": [i.to_post_body() for i in attachments],
+    }
     response = requests.post(url, json=body, auth=auth)
     assert response.status_code == 200, response.text
     return ApiCard.from_doc(response.json())
@@ -124,7 +178,7 @@ def test_add_some(auth: HTTPBasicAuth, deck_id: str):
     # TODO I get about 1.5it/sec, so rate limited, even though it said 5it/sec in the doc? parallel could still help
     # this might even work with threading, right?
     for i in tqdm(range(count)):
-        c = create_card(auth, deck_id, f"({i:03d}) {uuid4()}")
+        c = create_card(auth, deck_id, f"({i:03d}) {uuid4()}", [])
         pprint(c)
 
 
@@ -142,7 +196,7 @@ if __name__ == "__main__":
     from cards.config import Credentials
 
     credentials = Credentials.from_default_file()
-    auth = HTTPBasicAuth(credentials.mochi.token)
+    auth = HTTPBasicAuth(credentials.mochi.token, "")
     deck_id = "-"  # api-test
     test_list_some(auth, deck_id)
     # test_add_some(auth, deck_id)

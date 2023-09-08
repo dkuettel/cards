@@ -5,42 +5,40 @@ from pathlib import Path
 import click
 from tqdm import tqdm
 
-from cards.data.plain.documents import align_and_write_metas_to_disk, get_all_documents
-from cards.data.plain.transform import (
-    get_cards_from_documents,
-    get_new_cards_from_documents,
-)
+from cards.data.rich.documents import get_all_rich_documents
 from cards.mochi.deck import MochiDeck
 from cards.mochi.state import MochiDiff, states_from_apply_diff
-
-# TODO python 3.10 has good pprint for dataclasses too
-# from pprint import pprint
-
-# TODO deletion can be dangerous
-# maybe archive, or thrash, and also keep a local copy, and also ask user? it should almost never happen anyway
 
 
 def sync(token: str, deck_id: str, path: Path):
 
     deck = MochiDeck.from_token(deck_id, token)
 
-    documents = get_all_documents(path)
-    documents = align_and_write_metas_to_disk(documents)
+    # documents = get_all_documents(path)
+    documents = get_all_rich_documents(path)
+    # documents = align_and_write_metas_to_disk(documents)
 
-    new_cards = get_new_cards_from_documents(documents)
-    target_cards = get_cards_from_documents(documents)
+    cards = [c for d in documents for c in d.get_mochi_cards()]
+
+    # new_cards = get_new_cards_from_documents(documents)
+    # target_cards = get_cards_from_documents(documents)
+    # existing_cards, new_cards = split_cards(cards)
+    # TODO should we even split? if MochiDiff could do it instead?
 
     # TODO have this local as well, when/how to rescan to be sure?
-    state = {c.id: c for c in deck.list_cards()}
-    target = {c.get_card().id: c for c in target_cards}
+    # state = {c.id: c for c in deck.list_cards()}
+    # target = {c.get_card().id: c for c in target_cards}
 
-    diff = MochiDiff.from_targets(state, target, new_cards)
+    # diff = MochiDiff.from_targets(state, target, new_cards)
+    # TODO or do we want to keep state, our best guess of remote?
+    state = deck.list_cards()
+    diff = MochiDiff.from_states(state, cards)
     diff.print_summary()
 
-    if len(diff) > 0:
+    if diff.count() > 0:
         click.confirm("Continue?", abort=True)
         for state in tqdm(
-            states_from_apply_diff(deck, state, diff), total=len(diff), desc="sync"
+            states_from_apply_diff(deck, state, diff), total=diff.count(), desc="sync"
         ):
             # TODO should write state to file everytime
             pass

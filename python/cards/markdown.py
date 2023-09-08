@@ -7,13 +7,16 @@ type-safe interface for the rest of the code base
 """
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 import pandoc
 from pandoc.types import Block  # pyright: ignore
 from pandoc.types import Emph  # pyright: ignore
 from pandoc.types import HorizontalRule  # pyright: ignore
+from pandoc.types import Image  # pyright: ignore
 from pandoc.types import Inline  # pyright: ignore
 from pandoc.types import Meta  # pyright: ignore
 from pandoc.types import Pandoc  # pyright: ignore
@@ -21,9 +24,11 @@ from pandoc.types import Para  # pyright: ignore
 from pandoc.types import Space  # pyright: ignore
 from pandoc.types import Str  # pyright: ignore
 
+from cards.data import Direction  # pyright: ignore
+
 
 @dataclass
-class Doc:
+class Markdown:
     body: list[Block]
 
     @classmethod
@@ -44,9 +49,18 @@ class Doc:
             options=["--columns=3", "--wrap=none"],
         )
 
-    def reversed(self) -> Doc:
+    def reversed(self) -> Markdown:
         first, second = split_blocks(self.body)
-        return Doc(second + [HorizontalRule()] + first)
+        return Markdown(second + [HorizontalRule()] + first)
+
+    def oriented(self, direction: Direction) -> Markdown:
+        match direction:
+            case Direction.forward:
+                return self
+            case Direction.backward:
+                return self.reversed()
+            case _:
+                assert False
 
     def has_reverse_prompt(self) -> bool:
         _, answer = split_blocks(self.body)
@@ -59,7 +73,7 @@ class Doc:
             case _:
                 assert False, prompts
 
-    def maybe_prompted(self) -> Doc:
+    def maybe_prompted(self) -> Markdown:
         question, answer = split_blocks(self.body)
 
         def f(block: Block):
@@ -77,7 +91,16 @@ class Doc:
             return None
 
         answer = [b for b in map(g, answer) if b is not None]
-        return Doc(question + [HorizontalRule()] + answer)
+        return Markdown(question + [HorizontalRule()] + answer)
+
+    def with_rewritten_images(self, transform: Callable[[str], tuple[str, str]]) -> Markdown:
+        body = deepcopy(self.body)
+        for block in pandoc.iter(body):
+            match block:
+                case Image(_, _, (path, _)):
+                    # TODO what happens to the iter if we change things as we go?
+                    block[2] = transform(path)
+        return Markdown(body)
 
 
 def split_blocks(blocks: list[Block]) -> tuple[list[Block], list[Block]]:
@@ -87,6 +110,7 @@ def split_blocks(blocks: list[Block]) -> tuple[list[Block], list[Block]]:
 
 def maybe_match_prompt(block: Block) -> None | list[Inline]:
     match block:
+        # TODO is ! even okay? or does it clash with ![]() for images?
         case Para([Str("!" | "prompt:" | "Prompt:"), Space(), *prompt]):
             return prompt
         case _:

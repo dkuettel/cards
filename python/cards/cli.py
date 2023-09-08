@@ -24,7 +24,8 @@ def preview():
     from cards.config import Config
     from cards.preview import main
 
-    config = Config.from_default_file()
+    # config = Config.from_default_file()
+    config = Config.from_test_file()
 
     main(config.sync.path)
 

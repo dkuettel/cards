@@ -4,11 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, Optional
 
-from tqdm import tqdm
-
 from cards.data.plain.documents import Document, read_meta_from_disk, write_meta_to_disk
 from cards.mochi.deck import MochiCard
-from cards.mochi.state import NewMochiCard, TargetMochiCard
+from cards.mochi.state import NewMochiCard, ExistingMochiCard
 
 
 @dataclass(frozen=True)
@@ -46,7 +44,7 @@ class NewCardBackward(NewMochiCard):
 
 
 @dataclass(frozen=True)
-class TargetCard(TargetMochiCard):
+class TargetCard(ExistingMochiCard):
     card: MochiCard
     source: Path
 
@@ -68,26 +66,26 @@ def get_new_cards_from_document(doc: Document) -> Iterator[NewMochiCard]:
         yield NewCardBackward(as_mochi_md(doc.reverse_md, doc.reverse_prompt), doc.path)
 
 
-def get_cards_from_documents(docs: list[Document]) -> list[TargetMochiCard]:
-    return [
-        c
-        for doc in tqdm(docs, desc="cards from documents")
-        for c in get_cards_from_document(doc)
-    ]
+# def get_cards_from_documents(docs: list[Document]) -> list[TargetMochiCard]:
+#     return [
+#         c
+#         for doc in tqdm(docs, desc="cards from documents")
+#         for c in get_cards_from_document(doc)
+#     ]
 
 
-def get_cards_from_document(doc: Document) -> Iterator[TargetMochiCard]:
-    if doc.meta.id is not None:
-        yield TargetCard(
-            MochiCard(doc.meta.id, as_mochi_md(doc.md, doc.prompt)), doc.path
-        )
-    if doc.meta.reverse_id is not None and doc.reverse_md is not None:
-        yield TargetCard(
-            MochiCard(
-                doc.meta.reverse_id, as_mochi_md(doc.reverse_md, doc.reverse_prompt)
-            ),
-            doc.path,
-        )
+# def get_cards_from_document(doc: Document) -> Iterator[TargetMochiCard]:
+#     if doc.meta.id is not None:
+#         yield TargetCard(
+#             MochiCard(doc.meta.id, as_mochi_md(doc.md, doc.prompt)), doc.path
+#         )
+#     if doc.meta.reverse_id is not None and doc.reverse_md is not None:
+#         yield TargetCard(
+#             MochiCard(
+#                 doc.meta.reverse_id, as_mochi_md(doc.reverse_md, doc.reverse_prompt)
+#             ),
+#             doc.path,
+#         )
 
 
 def as_mochi_md(body: list, prompt: Optional[list]) -> str:

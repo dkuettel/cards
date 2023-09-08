@@ -4,23 +4,31 @@ from dataclasses import dataclass
 
 from requests.auth import HTTPBasicAuth
 
-from cards.mochi.api import ApiCard, create_card, delete_card, list_cards, update_card
+from cards.mochi.api import (
+    ApiAttachment,
+    ApiCard,
+    create_card,
+    delete_card,
+    list_cards,
+    update_card,
+)
 
 
+# TODO should we go from data sources directly to Api-like card?
+# not sure, this makes it an easy layer focusing only on what we use?
+# TODO currently we use this as == and sync decision? so it has to be a stable thing, we can reference files for example, need final bytes
 @dataclass(frozen=True)
 class MochiCard:
     id: str
     content: str
-    # TODO eventually we will have attachments, so it makes sense to have a dataclass
+    attachments: list[ApiAttachment]
 
     @classmethod
     def from_api_card(cls, card: ApiCard):
-        assert card.template_id is None
-        assert not card.archived
-        assert not card.review_reverse
         return cls(
             card.id,
             card.content,
+            card.attachments,  # TODO mutability?
         )
 
     def to_api_card(self, deck_id: str) -> ApiCard:
@@ -28,9 +36,7 @@ class MochiCard:
             id=self.id,
             content=self.content,
             deck_id=deck_id,
-            template_id=None,
-            archived=False,
-            review_reverse=False,
+            attachments=self.attachments,  # TODO mutability?
         )
 
 
@@ -57,6 +63,6 @@ class MochiDeck:
         api_card = update_card(self.auth, card.to_api_card(self.deck_id))
         return MochiCard.from_api_card(api_card)
 
-    def create_card(self, content: str) -> MochiCard:
-        api_card = create_card(self.auth, self.deck_id, content)
+    def create_card(self, content: str, attachments: list[ApiAttachment]) -> MochiCard:
+        api_card = create_card(self.auth, self.deck_id, content, attachments)
         return MochiCard.from_api_card(api_card)
