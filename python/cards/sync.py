@@ -16,9 +16,6 @@ from tqdm import tqdm
 # TODO python 3.10 has good pprint for dataclasses too
 # from pprint import pprint
 
-# TODO commited some tokens for testing
-# retire token eventually
-
 # TODO changes
 # make also removal sync correct
 # plus reverse make it so that it says at top, dont use built-in reverse for now
@@ -30,14 +27,11 @@ from tqdm import tqdm
 # maybe archive, or thrash, and also keep a local copy, and also ask user? it should almost never happen anyway
 
 
-def sync(source: Path):
+def sync(token: str, deck_id: str, path: Path):
 
-    token = "-"
-    # deck_id = "-"  # brainscape
-    deck_id = "-"  # brainscape2
     deck = MochiDeck.from_token(deck_id, token)
 
-    documents = get_all_documents(source)
+    documents = get_all_documents(path)
 
     new_cards = get_new_cards_from_documents(documents)
     cards = get_cards_from_documents(documents)

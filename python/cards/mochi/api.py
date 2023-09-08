@@ -135,7 +135,10 @@ def test_update_some(auth: HTTPBasicAuth, deck_id: str):
 
 
 if __name__ == "__main__":
-    auth = HTTPBasicAuth("-", "")
+    from cards.config import Credentials
+
+    credentials = Credentials.from_default_file()
+    auth = HTTPBasicAuth(credentials.mochi.token)
     deck_id = "-"  # api-test
     test_list_some(auth, deck_id)
     # test_add_some(auth, deck_id)

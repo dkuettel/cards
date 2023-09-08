@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import click
 
 
@@ -12,6 +10,10 @@ def cli():
 
 @cli.command()
 def sync():
+    from cards.config import Config, Credentials
     from cards.sync import sync
 
-    sync(Path("brainscape/v2"))
+    config = Config.from_default_file()
+    credentials = Credentials.from_default_file()
+
+    sync(credentials.mochi.token, config.sync.deck_id, config.sync.path)
