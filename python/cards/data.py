@@ -120,12 +120,15 @@ class MetaDiff:
 
 
 def get_cards(
-    markdowns: dict[Path, Markdown], meta: dict[Path, Meta]
+    base: Path, markdowns: dict[Path, Markdown], meta: dict[Path, Meta]
 ) -> tuple[dict[str, Card], list[Card]]:
     existing_cards = dict()
     new_cards = []
     for path, markdown in tqdm(markdowns.items(), desc="make cards"):
-        images = Images.from_base(path)
+        # TODO it's not very clear when we have relative paths and when absolute paths
+        # we could always work with absolute paths unless in the name?
+        # need to see how that handles well with meta.json and other stuff
+        images = Images.from_base(base / path.parent)
         markdown = markdown.with_rewritten_images(images.collect)
         card = Card(
             markdown.maybe_prompted().as_mochi_md_str(),

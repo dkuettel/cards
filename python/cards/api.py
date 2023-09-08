@@ -21,12 +21,15 @@ def url_at(at: str) -> str:
 def model_config():
     return ConfigDict(
         alias_generator=lambda x: x.replace("_", "-"),
+        populate_by_name=True,
         strict=True,
     )
 
 
-def body_from_model(m: BaseModel) -> dict:
-    return m.model_dump(by_alias=True)
+def body_from_model(m: BaseModel, exclude: None | set[str] = None) -> dict:
+    # TODO I dont like the options here, if that's always good, exclude_defaults
+    # see comment down in raw_update_card
+    return m.model_dump(by_alias=True, exclude_defaults=True, exclude=exclude)
 
 
 class Attachment(BaseModel):
@@ -68,7 +71,7 @@ class Card(BaseModel):
     deck_id: str
     attachments: list[Attachment] = Field(default_factory=list)
     archived: bool = Field(default=False, alias="archived?")
-    trashed: bool = Field(default=False, alias="trashed?")
+    trashed: None | str = Field(default=None, alias="trashed?")
     review_reverse: bool = Field(default=False, alias="review-reverse?")
     template_id: None | str = None
 
@@ -138,6 +141,11 @@ def retrieve_card(auth: HTTPBasicAuth, card_id: str) -> Card:
 
 def raw_update_card(auth: HTTPBasicAuth, card: dict) -> dict:
     url = url_at(f"cards/{card['id']}")
+    # TODO I dont like this, how to control what's passed what not?
+    # pydantic Model stuff is good for validation, but we probably still need to control what goes thru?
+    # because in listing, a card has an id, when updating, the card id comes thru the url ...
+    # so we cannot really make the Card Model the only thing, maybe to model_dump(include=...) explicitely?
+    card.pop("id")
     response = requests.post(url, json=card, auth=auth)
     assert response.status_code == 200, response.text
     return response.json()

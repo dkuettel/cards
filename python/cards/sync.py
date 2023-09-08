@@ -30,7 +30,7 @@ def sync(token: str, deck_id: str, path: Path):
         write_meta(path, synced_meta)
         meta = synced_meta
 
-    existing_cards, new_cards = get_cards(markdowns, meta)
+    existing_cards, new_cards = get_cards(path, markdowns, meta)
 
     # TODO do we want to keep state, our best guess of remote?
     # TODO see if we can move all tqdm stuff high up here? so that the decision how/what to show is top-level
@@ -44,7 +44,7 @@ def sync(token: str, deck_id: str, path: Path):
     }
     for card in remote.values():
         assert not card.archived
-        assert not card.trashed
+        assert card.trashed is None
         assert not card.review_reverse
         assert card.template_id is None
 
