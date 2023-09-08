@@ -124,7 +124,7 @@ def get_cards(
 ) -> tuple[dict[str, Card], list[Card]]:
     existing_cards = dict()
     new_cards = []
-    for path, markdown in markdowns.items():
+    for path, markdown in tqdm(markdowns.items(), desc="make cards"):
         images = Images.from_base(path)
         markdown = markdown.with_rewritten_images(images.collect)
         card = Card(
