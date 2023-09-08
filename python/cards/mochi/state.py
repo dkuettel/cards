@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
-from cards.data.markdown import Card, Meta
+from cards.data import Card, Meta
 from cards.mochi.deck import MochiCard, MochiDeck
 
 

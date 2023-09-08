@@ -3,7 +3,7 @@ from pathlib import Path
 import click
 from tqdm import tqdm
 
-from cards.data.markdown import (
+from cards.data import (
     MetaDiff,
     get_cards,
     get_synced_meta,
