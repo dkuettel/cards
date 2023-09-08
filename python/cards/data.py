@@ -67,7 +67,7 @@ def read_meta(base: Path) -> dict[Path, Meta]:
 # and only convert when saving and loading?
 def write_meta(base: Path, meta: dict[Path, Meta]):
     meta_str = {str(p): m for p, m in meta.items()}
-    (base / "meta.json").write_text(to_json(meta_str))
+    (base / "meta.json").write_text(to_json(meta_str, indent=4))
 
 
 def get_synced_meta(
