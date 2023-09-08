@@ -1,4 +1,4 @@
-/credentials.toml
-__pycache__
-/Session.vim
 /.venv/
+/Session.vim
+/data
+__pycache__

@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from typer import Typer
 
 
 class state:
-    test: bool = False
+    base: Path = Path("./data")
 
 
 app = Typer()
@@ -10,7 +12,8 @@ app = Typer()
 
 @app.callback()
 def main(test: bool = False):
-    state.test = test
+    if test:
+        state.base = Path("./test-data")
 
 
 @app.command()
@@ -18,10 +21,10 @@ def sync():
     from cards.config import Config, Credentials
     from cards.sync import sync
 
-    config = Config.from_test_flag(state.test)
-    credentials = Credentials.from_default_file()
+    config = Config.from_base(state.base)
+    credentials = Credentials.from_base(state.base)
 
-    sync(credentials.mochi.token, config.sync.deck_id, config.sync.path)
+    sync(credentials.mochi.token, config.sync.deck_id, state.base / config.sync.path)
 
 
 @app.command()
@@ -29,9 +32,9 @@ def preview():
     from cards.config import Config
     from cards.preview import main
 
-    config = Config.from_test_flag(state.test)
+    config = Config.from_base(state.base)
 
-    main(config.sync.path)
+    main(state.base / config.sync.path)
 
 
 @app.command()
@@ -40,7 +43,7 @@ def backup():
     from cards.backup import backup_deck
     from cards.config import Config, Credentials
 
-    config = Config.from_test_flag(state.test)
-    credentials = Credentials.from_default_file()
+    config = Config.from_base(state.base)
+    credentials = Credentials.from_base(state.base)
 
     backup_deck(credentials.mochi.token, config.sync.deck_id)
