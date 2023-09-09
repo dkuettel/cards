@@ -39,7 +39,9 @@ def states_from_apply_diff(
 
     for card in diff.new:
         u = api.create_card(auth, deck_id, card.content, card.attachments)
-        meta[card.path].set_by_direction(card.direction, u.id)
+        meta.setdefault(card.path, Meta(None, None)).set_by_direction(
+            card.direction, u.id
+        )
         state[u.id] = u
         yield state, meta
 
