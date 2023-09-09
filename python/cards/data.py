@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import sha256
+from io import BytesIO
 from pathlib import Path
 
+from PIL import Image
 from serde import serde
 from serde.json import from_json, to_json
 from tqdm import tqdm
@@ -160,25 +162,36 @@ def get_cards(
 class Images:
     base: Path
     next_index: int
-    data: dict[str, Path]
+    data: dict[str, bytes]
+    max_width: int = 800
 
     @classmethod
     def from_base(cls, base: Path):
         return cls(base, 0, {})
 
     def collect(self, path: str) -> tuple[str, str]:
+
         local = self.base / path
-        assert local.exists(), local
-        assert local.suffix in {".png", ".jpg", ".jpeg"}, local
         # TODO mochis requirements on names here a bit arbitrary, and not correctly documented too
-        name = f"i{self.next_index:08}{local.suffix}"
+        name = f"i{self.next_index:08}.png"
         remote = f"@media/{name}"
-        self.data[name] = local
         self.next_index += 1
+
+        with Image.open(local) as image:
+            if image.width > self.max_width:
+                height = round(image.height * self.max_width / image.width)
+                image = image.resize((self.max_width, height))
+            data = BytesIO()
+            image.save(data, "png")
+            self.data[name] = data.getvalue()
+
         hash = sha256()
-        hash.update(local.read_bytes())
+        hash.update(self.data[name])
+
         return remote, hash.hexdigest()
 
     def as_api_attachments(self) -> list[Attachment]:
-        # TODO we might also consider scaling the images?
-        return [Attachment.from_file(k, v) for k, v in self.data.items()]
+        return [
+            Attachment.from_bytes(name, "image/png", data)
+            for name, data in self.data.items()
+        ]
