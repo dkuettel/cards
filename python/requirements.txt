@@ -66,6 +66,8 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
+pillow==10.0.0
+    # via -r requirements.in
 plumbum==1.8.2
     # via pandoc
 ply==3.11
