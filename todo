@@ -23,6 +23,8 @@ o when at it, also check if single card retrieve has the attachments (as also li
 x really need to separate data and code, telescope files finds too much, or control that?
 - some easy parallel code could speed things up, design is very easy now
 - change chrome cards shortcut to mochi when done
+- eg, derivatives-fro-inverse-functions.md, wrong name
+    - `cards rename` or something? since we cannot now do it just like that
 
 notes:
 - if we ever want our own ids, and mochi doesnt provide, we could use comment or invisible markdown to carry this, if it exists?
