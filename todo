@@ -1,5 +1,6 @@
 
 todo:
+- maybe add sanity check? that there are only *.md files, and no typos?
 - images
     x control how large they look?
         x mochi already does it nicely
