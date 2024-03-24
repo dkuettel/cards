@@ -1,5 +1,9 @@
 
 todo:
+! botlzmann-machine.md is misnamed, add `cards rename` now?
+    - also golden-ration.md
+- something is wrong with pandoc html version of codeblocks
+    - in mochi they look fine
 - maybe add sanity check? that there are only *.md files, and no typos?
 - images
     x control how large they look?
