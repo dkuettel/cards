@@ -190,7 +190,4 @@ class Images:
         return remote, hash.hexdigest()
 
     def as_api_attachments(self) -> list[Attachment]:
-        return [
-            Attachment.from_bytes(name, "image/png", data)
-            for name, data in self.data.items()
-        ]
+        return [Attachment(name, data) for name, data in self.data.items()]

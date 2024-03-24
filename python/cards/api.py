@@ -5,9 +5,9 @@ https://mochi.cards/docs/api/
 
 from __future__ import annotations
 
-from base64 import b64encode
+from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
 
 import requests
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,33 +32,15 @@ def body_from_model(m: BaseModel, exclude: None | set[str] = None) -> dict:
     return m.model_dump(by_alias=True, exclude_defaults=True, exclude=exclude)
 
 
-class Attachment(BaseModel):
-    model_config = model_config()
-
+@dataclass
+class Attachment:
     file_name: str
-    content_type: str
-    data: str
-
-    @classmethod
-    def from_bytes(cls, file_name: str, content_type: str, data: bytes):
-        return cls(
-            file_name=file_name,
-            content_type=content_type,
-            data=b64encode(data).decode("utf-8"),
-        )
+    binary_data: bytes
 
     @classmethod
     def from_file(cls, file_name: str, path: Path):
-        match path.suffix:
-            case ".png":
-                content_type = "image/png"
-            case ".jpg" | ".jpeg":
-                content_type = "image/jpeg"
-            case _:
-                assert False, path
-        return cls.from_bytes(
+        return cls(
             file_name,
-            content_type,
             path.read_bytes(),
         )
 
@@ -69,7 +51,6 @@ class Card(BaseModel):
     id: str
     content: str
     deck_id: str
-    attachments: list[Attachment] = Field(default_factory=list)
     archived: bool = Field(default=False, alias="archived?")
     trashed: None | str = Field(default=None, alias="trashed?")
     review_reverse: bool = Field(default=False, alias="review-reverse?")
@@ -108,14 +89,11 @@ def list_cards(auth: HTTPBasicAuth, deck_id: None | str = None) -> Iterator[Card
         yield Card(**doc)
 
 
-def raw_create_card(
-    auth: HTTPBasicAuth, deck_id: str, content: str, attachments: list[Attachment]
-) -> dict:
+def raw_create_card(auth: HTTPBasicAuth, deck_id: str, content: str) -> dict:
     url = url_at("cards")
     body = {
         "deck-id": deck_id,
         "content": content,
-        "attachments": [body_from_model(i) for i in attachments],
     }
     response = requests.post(url, json=body, auth=auth)
     assert response.status_code == 200, response.text
@@ -125,7 +103,10 @@ def raw_create_card(
 def create_card(
     auth: HTTPBasicAuth, deck_id: str, content: str, attachments: list[Attachment]
 ) -> Card:
-    return Card(**raw_create_card(auth, deck_id, content, attachments))
+    card = Card(**raw_create_card(auth, deck_id, content))
+    for attachment in attachments:
+        raw_update_attachment(auth, card.id, attachment)
+    return card
 
 
 def raw_retrieve_card(auth: HTTPBasicAuth, card_id: str) -> dict:
@@ -137,6 +118,12 @@ def raw_retrieve_card(auth: HTTPBasicAuth, card_id: str) -> dict:
 
 def retrieve_card(auth: HTTPBasicAuth, card_id: str) -> Card:
     return Card(**raw_retrieve_card(auth, card_id))
+
+
+def raw_update_attachment(auth: HTTPBasicAuth, id: str, attachment: Attachment):
+    url = url_at(f"cards/{id}/attachments/{attachment.file_name}")
+    response = requests.post(url, files={"file": attachment.binary_data}, auth=auth)
+    assert response.status_code == 200, response.text
 
 
 def raw_update_card(auth: HTTPBasicAuth, card: dict) -> dict:
@@ -151,7 +138,12 @@ def raw_update_card(auth: HTTPBasicAuth, card: dict) -> dict:
     return response.json()
 
 
-def update_card(auth: HTTPBasicAuth, card: Card) -> Card:
+def update_card(
+    auth: HTTPBasicAuth, card: Card, attachments: Sequence[Attachment]
+) -> Card:
+    for attachment in attachments:
+        # NOTE depending on changes, we might end up with unreferenced images for a card on the server
+        raw_update_attachment(auth, card.id, attachment)
     return Card(**raw_update_card(auth, body_from_model(card)))
 
 

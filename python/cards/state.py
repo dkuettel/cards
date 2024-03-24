@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
 
 from requests.auth import HTTPBasicAuth
 
@@ -26,8 +26,8 @@ def states_from_apply_diff(
                 id=id,
                 content=card.content,
                 deck_id=deck_id,
-                attachments=card.attachments,
             ),
+            attachments=card.attachments,
         )
         state[u.id] = u
         yield state, meta
