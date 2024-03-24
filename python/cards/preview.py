@@ -1,6 +1,5 @@
 from pathlib import Path
 from subprocess import CalledProcessError, run
-from typing import Optional
 
 from flask import Flask, current_app, redirect, url_for
 
@@ -62,7 +61,7 @@ def mtime():
     return {"mtime": stat.st_mtime}
 
 
-def get_most_recent_md(folder: Path) -> Optional[Path]:
+def get_most_recent_md(folder: Path) -> None | Path:
     candidates = folder.glob("**/*.md")
     candidates = sorted(candidates, key=lambda c: c.stat().st_mtime)
     if len(candidates) == 0:

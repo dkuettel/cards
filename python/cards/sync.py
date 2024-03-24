@@ -16,7 +16,6 @@ from cards.state import MochiDiff, states_from_apply_diff
 
 
 def sync(token: str, deck_id: str, path: Path):
-
     auth = auth_from_token(token)
 
     markdowns = read_markdowns(path)

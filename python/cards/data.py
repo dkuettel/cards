@@ -170,7 +170,6 @@ class Images:
         return cls(base, 0, {})
 
     def collect(self, path: str) -> tuple[str, str]:
-
         local = self.base / path
         # TODO mochis requirements on names here a bit arbitrary, and not correctly documented too
         name = f"i{self.next_index:08}.png"

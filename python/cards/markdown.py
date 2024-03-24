@@ -7,23 +7,25 @@ type-safe interface for the rest of the code base
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Callable
 
 import pandoc
-from pandoc.types import Block  # pyright: ignore
-from pandoc.types import Emph  # pyright: ignore
-from pandoc.types import HorizontalRule  # pyright: ignore
-from pandoc.types import Image  # pyright: ignore
-from pandoc.types import Inline  # pyright: ignore
-from pandoc.types import Meta  # pyright: ignore
-from pandoc.types import Pandoc  # pyright: ignore
-from pandoc.types import Para  # pyright: ignore
-from pandoc.types import Space  # pyright: ignore
-from pandoc.types import Str  # pyright: ignore
+from pandoc.types import (
+    Block,  # pyright: ignore
+    Emph,  # pyright: ignore
+    HorizontalRule,  # pyright: ignore
+    Image,  # pyright: ignore
+    Inline,  # pyright: ignore
+    Meta,  # pyright: ignore
+    Pandoc,  # pyright: ignore
+    Para,  # pyright: ignore
+    Space,  # pyright: ignore
+    Str,  # pyright: ignore
+)
 
 
 class Direction(Enum):
