@@ -20,6 +20,7 @@
         name = "dev";
         # sudo apt install pandoc texlive texlive-full ?
         # npm install -g katex worked?
+        # TODO there is also pandoc-katex ?
         paths = [ python uv ] ++ (with pkgs; [ ruff basedpyright pandoc nodePackages_latest.katex ]);
         extraOutputsToInstall = [ "lib" ];
       };

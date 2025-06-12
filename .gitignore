@@ -1,4 +1,5 @@
 /.venv/
 /Session.vim
 /data
+/result
 __pycache__
