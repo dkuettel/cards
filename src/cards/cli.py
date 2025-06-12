@@ -7,7 +7,7 @@ class state:
     base: Path = Path("./data")
 
 
-app = Typer()
+app = Typer(pretty_exceptions_enable=True, no_args_is_help=True)
 
 
 @app.callback()
