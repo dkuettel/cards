@@ -1,4 +1,0 @@
-#!/bin/zsh
-set -eux -o pipefail
-
-ipython -c 'from pathlib import Path' -i

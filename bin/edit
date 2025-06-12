@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+set -eux -o pipefail
+
+cd $h
+
+# TODO will have to use uv or so to activate python venv?
+
+if [[ -e Session.vim ]]; then
+    es Session.vim
+else
+    e -o todo
+fi

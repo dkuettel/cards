@@ -1,7 +1,9 @@
 
 todo:
+- make meta.json sorted or something, to have it more stable, especially in git diff
 ! botlzmann-machine.md is misnamed, add `cards rename` now?
     - also golden-ration.md
+    - also huffman-coding, not encoding
 - something is wrong with pandoc html version of codeblocks
     - in mochi they look fine
 - maybe add sanity check? that there are only *.md files, and no typos?
