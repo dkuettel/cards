@@ -2,7 +2,9 @@
   description = "dev env for cards";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
+    # TODO the new version has some abi problems with basedpyright
+    # nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-24.11";
   };
 
   outputs = { self, nixpkgs, ... }@inputs:
@@ -19,9 +21,9 @@
       dev = pkgs.buildEnv {
         name = "dev";
         # sudo apt install pandoc texlive texlive-full ?
-        # npm install -g katex worked?
+        # npm install -g katex worked? nodePackages_latest.katex brakes node stuff with basedpyright
         # TODO there is also pandoc-katex ?
-        paths = [ python uv ] ++ (with pkgs; [ ruff basedpyright pandoc nodePackages_latest.katex ]);
+        paths = [ python uv ] ++ (with pkgs; [ ruff basedpyright pandoc ]);
         extraOutputsToInstall = [ "lib" ];
       };
     in
