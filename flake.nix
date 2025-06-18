@@ -2,9 +2,7 @@
   description = "dev env for cards";
 
   inputs = {
-    # TODO the new version has some abi problems with basedpyright
-    # nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
   };
 
   outputs = { self, nixpkgs, ... }@inputs:
