@@ -4,16 +4,13 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
 
-    # NOTE that doesnt work for me, some build problem
-    # maybe https://github.com/boisgera/pandoc will update it, currently it doesnt seem too broken (?)
-    # the python package https://boisgera.github.io/pandoc/
-    # currently wants pandoc at version 3.2.1
-    # see https://lazamar.co.uk/nix-versions/?package=pandoc
-    # pandocpkgs.url = "github:nixos/nixpkgs?rev=efcb904a6c674d1d3717b06b89b54d65104d4ea7";
-    # and then use pandocpkgs.legacyPackages.${system}.haskellPackages.pandoc_3_2_1
+    # the python package https://boisgera.github.io/pandoc/ currently needs pandoc 3.2.1 or lower
+    # was trying with https://lazamar.co.uk/nix-versions/?package=pandoc but it's somehow totally off
+    # nixos-25.05 has 3.6
+    pandocpkgs.url = "github:nixos/nixpkgs?rev=3e2cf88148e732abc1d259286123e06a9d8c964a";  # 3.1.11.1
   };
 
-  outputs = { self, nixpkgs, ... }@inputs:
+  outputs = { self, nixpkgs, pandocpkgs, ... }@inputs:
     let
       inherit (nixpkgs) lib;
       system = "x86_64-linux";
@@ -29,8 +26,7 @@
         # also ad sudo apt install texlive texlive-full ?
         # npm install -g katex worked? nodePackages_latest.katex brakes node stuff with basedpyright
         # TODO there is also pandoc-katex ?
-        # TODO an overlay would be better than using pandocpkgs directly? in case something else installs it too?
-        paths = [ python uv ] ++ (with pkgs; [ ruff basedpyright pandoc ]);
+        paths = [ python uv ] ++ (with pkgs; [ ruff basedpyright pandocpkgs.legacyPackages.${system}.pandoc ]);
         extraOutputsToInstall = [ "lib" ];
       };
     in
