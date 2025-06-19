@@ -7,7 +7,7 @@
     # the python package https://boisgera.github.io/pandoc/ currently needs pandoc 3.2.1 or lower
     # was trying with https://lazamar.co.uk/nix-versions/?package=pandoc but it's somehow totally off
     # nixos-25.05 has 3.6
-    pandocpkgs.url = "github:nixos/nixpkgs?rev=3e2cf88148e732abc1d259286123e06a9d8c964a";  # 3.1.11.1
+    pandocpkgs.url = "github:nixos/nixpkgs?rev=3e2cf88148e732abc1d259286123e06a9d8c964a"; # 3.1.11.1
   };
 
   outputs = { self, nixpkgs, pandocpkgs, ... }@inputs:
@@ -26,7 +26,12 @@
         # also ad sudo apt install texlive texlive-full ?
         # npm install -g katex worked? nodePackages_latest.katex brakes node stuff with basedpyright
         # TODO there is also pandoc-katex ?
-        paths = [ python uv ] ++ (with pkgs; [ ruff basedpyright pandocpkgs.legacyPackages.${system}.pandoc ]);
+        paths = [ python uv ] ++ (with pkgs; [
+          ruff
+          basedpyright
+          pandocpkgs.legacyPackages.${system}.pandoc
+          nodePackages_latest.katex # for the lib/node_modules/katex/dist files in preview
+        ]);
         extraOutputsToInstall = [ "lib" ];
       };
     in

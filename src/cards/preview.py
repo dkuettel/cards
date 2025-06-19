@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from subprocess import CalledProcessError, run
 
@@ -29,7 +30,7 @@ def preview():
                 str(path),
                 # needs to be local, because --self-contained copies it everytime
                 # (using https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/ will rate-limit)
-                "--katex=/home/dkuettel/bin/nodejs/lib/node_modules/katex/dist/",
+                f"--katex={os.environ['h']}/result/lib/node_modules/katex/dist/",
                 f"--metadata=pagetitle={name}",
                 # to find images relative to the markdown file
                 f"--resource-path={path.parent}",
@@ -69,6 +70,6 @@ def get_most_recent_md(folder: Path) -> None | Path:
     return candidates[-1]
 
 
-def main(watch_folder: Path = Path("./brainscape")):
+def main(watch_folder: Path = Path("./data")):
     app.config["watch_folder"] = watch_folder
     app.run()
