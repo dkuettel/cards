@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 
+import typer
 from PIL import Image
 from serde import serde
 from serde.json import from_json, to_json
@@ -192,3 +194,32 @@ class Images:
 
     def as_api_attachments(self) -> list[Attachment]:
         return [Attachment(name, data) for name, data in self.data.items()]
+
+
+def rename(base: Path, source: Path, target: Path):
+    # NOTE we need to resolve everything so that we can compute relative paths reliably
+    base = base.resolve(strict=True)
+    try:
+        source = source.resolve(strict=True).relative_to(base)
+        target = target.resolve(strict=False).relative_to(base)
+    except ValueError:
+        print(
+            f"Source {source} and target {target} must be inside base {base}.",
+            file=sys.stderr,
+        )
+        raise typer.Abort()
+
+    if target.exists():
+        print(f"Target {target} already exists.", file=sys.stderr)
+        raise typer.Abort()
+
+    meta = read_meta(base)
+
+    if source not in meta:
+        print(f"Source {source} is not in {base / 'meta.json'}.", file=sys.stderr)
+        raise typer.Abort()
+
+    meta[target] = meta.pop(source)
+    (base / source).rename(base / target)
+
+    write_meta(base, meta)

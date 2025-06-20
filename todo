@@ -1,8 +1,6 @@
 
 todo:
-! botlzmann-machine.md is misnamed, add `cards rename` now?
-    - also golden-ration.md
-    - also huffman-coding, not encoding
+- in the code its not clear when paths are absolute and when not, in the context of meta.json
 - something is wrong with pandoc html version of codeblocks
     - in mochi they look fine
 - maybe add sanity check? that there are only *.md files, and no typos?

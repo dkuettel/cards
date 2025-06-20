@@ -1,6 +1,8 @@
+import subprocess
 from pathlib import Path
+from typing import Annotated
 
-from typer import Typer
+from typer import Option, Typer
 
 
 class state:
@@ -11,9 +13,8 @@ app = Typer(pretty_exceptions_enable=True, no_args_is_help=True)
 
 
 @app.callback()
-def main(test: bool = False):
-    if test:
-        state.base = Path("./test-data")
+def main(base: Path):
+    state.base = base
 
 
 @app.command()
@@ -47,3 +48,18 @@ def backup():
     credentials = Credentials.from_base(state.base)
 
     backup_deck(credentials.mochi.token, config.sync.deck_id)
+
+
+@app.command()
+def rename(
+    source: Path,
+    target: Path,
+    edit: Annotated[bool, Option("--edit/--no-edit", "-e")] = False,
+):
+    # NOTE only renames md files that are also in the meta.json, but not other connected files like images
+    from cards.data import rename
+
+    rename(state.base, source, target)
+
+    if edit:
+        subprocess.run(["nvim", str(target)], check=True)
