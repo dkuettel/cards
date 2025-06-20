@@ -1,6 +1,5 @@
 
 todo:
-- make meta.json sorted or something, to have it more stable, especially in git diff
 ! botlzmann-machine.md is misnamed, add `cards rename` now?
     - also golden-ration.md
     - also huffman-coding, not encoding

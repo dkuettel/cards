@@ -68,7 +68,8 @@ def read_meta(base: Path) -> dict[Path, Meta]:
 # TODO we could work with absolute paths outside this boundary instead
 # and only convert when saving and loading?
 def write_meta(base: Path, meta: dict[Path, Meta]):
-    meta_str = {str(p): m for p, m in meta.items()}
+    # NOTE we sort it so that it's a bit more stable in a potential git diff
+    meta_str = {str(p): m for p, m in sorted(meta.items())}
     (base / "meta.json").write_text(to_json(meta_str, indent=4))
 
 
