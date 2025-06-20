@@ -4,31 +4,9 @@ todo:
 - something is wrong with pandoc html version of codeblocks
     - in mochi they look fine
 - maybe add sanity check? that there are only *.md files, and no typos?
-- images
-    x control how large they look?
-        x mochi already does it nicely
-        x similar in preview mode?
-    x we might already when uploading resize them to reasonable size
-        x (so far it looks like the image by mochi is untouched, so it stays as large as it was)
-        x we want to limit the width, not the height
-x split data and code, make code public git
-    x git filter-repo works
-    x but check again to be sure
-    x what about config.toml? deck id and stuff, should be in data instead?
-    x same for credentials, but not commited
 - plus the api doc is wrong, the regex cant be true, maybe talk to dev, then also ask about paging, and image changes
-x we probably cannot give a better progress for list cards?
-    x because we cannot parse the json before it has arrived fully?
-- it's solid and easy to understand, plus with tmux project we can have some easy bin/* stuff for new or so
-    - or just part of `cards add 'something'` maybe to add a template
-    - that could even start vim, and then on exit run sync, or just sync that one we just edited
-    - and we have some `cards ...` things to make operations, dont even need full sync all the time
 o when at it, also check if single card retrieve has the attachments (as also list might not contain reviews)
-x really need to separate data and code, telescope files finds too much, or control that?
 - some easy parallel code could speed things up, design is very easy now
-- change chrome cards shortcut to mochi when done
-- eg, derivatives-fro-inverse-functions.md, wrong name
-    - `cards rename` or something? since we cannot now do it just like that
 
 notes:
 - if we ever want our own ids, and mochi doesnt provide, we could use comment or invisible markdown to carry this, if it exists?
