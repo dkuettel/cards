@@ -1,4 +1,0 @@
-#!/usr/bin/env zsh
-set -eu -o pipefail
-
-uv run --project ${0:a:h:h} python -Pm cards $@
