@@ -25,7 +25,7 @@ def sync():
     config = Config.from_base(state.base)
     credentials = Credentials.from_base(state.base)
 
-    sync(credentials.mochi.token, config.sync.deck_id, state.base / config.sync.path)
+    sync(credentials.mochi.token, state.base / config.path, config.decks)
 
 
 @app.command()
@@ -35,19 +35,20 @@ def preview():
 
     config = Config.from_base(state.base)
 
-    main(state.base / config.sync.path)
+    main(state.base / config.path)
 
 
 @app.command()
 def backup():
-    """backup all cards of the default deck, raw, as json"""
+    """backup all cards of the configured decks, raw, as json"""
     from cards.backup import backup_deck
     from cards.config import Config, Credentials
 
     config = Config.from_base(state.base)
     credentials = Credentials.from_base(state.base)
 
-    backup_deck(credentials.mochi.token, config.sync.deck_id)
+    for deck_name, deck_id in config.decks.items():
+        backup_deck(credentials.mochi.token, deck_name, deck_id)
 
 
 @app.command()

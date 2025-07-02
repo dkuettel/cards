@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Set
 from dataclasses import dataclass
 from hashlib import sha256
 from io import BytesIO
@@ -20,6 +21,7 @@ from cards.markdown import Direction, Markdown
 @dataclass
 class Card:
     content: str
+    deck_name: str
     attachments: list[Attachment]
     path: Path
     direction: Direction
@@ -49,9 +51,9 @@ class Meta:
                 assert False
 
 
-def read_markdowns(base: Path) -> dict[Path, Markdown]:
-    base = base.absolute()
-    paths = list(base.rglob("*.md"))
+def read_markdowns(base: Path, decks: Set[str]) -> dict[Path, Markdown]:
+    """return paths are relative to base"""
+    paths = [path for deck in decks for path in (base / deck).rglob("*.md")]
     return {
         path.relative_to(base): Markdown.from_path(path)
         for path in tqdm(paths, desc="read markdowns")
@@ -62,13 +64,11 @@ def read_meta(base: Path) -> dict[Path, Meta]:
     at = base / "meta.json"
     if not at.exists():
         return {}
-    meta_str = from_json(dict[Path, Meta], at.read_text())
+    meta_str = from_json(dict[str, Meta], at.read_text())
     meta = {Path(p): m for p, m in meta_str.items()}
     return meta
 
 
-# TODO we could work with absolute paths outside this boundary instead
-# and only convert when saving and loading?
 def write_meta(base: Path, meta: dict[Path, Meta]):
     # NOTE we sort it so that it's a bit more stable in a potential git diff
     meta_str = {str(p): m for p, m in sorted(meta.items())}
@@ -111,9 +111,9 @@ class MetaDiff:
         for path in set(state) | set(target):
             for direction in Direction:
                 now = state.get(path, Meta(None, None)).get_by_direction(direction)
-                then = target.get(path, Meta(None, None)).get_by_direction(direction)
-                if now != then:
-                    changes.append((path, direction, now, then))
+                later = target.get(path, Meta(None, None)).get_by_direction(direction)
+                if now != later:
+                    changes.append((path, direction, now, later))
         return cls(changes)
 
     def print_summary(self):
@@ -127,37 +127,48 @@ class MetaDiff:
 def get_cards(
     base: Path, markdowns: dict[Path, Markdown], meta: dict[Path, Meta]
 ) -> tuple[dict[str, Card], list[Card]]:
-    existing_cards = dict()
-    new_cards = []
+    existing_cards: dict[str, Card] = dict()
+    new_cards: list[Card] = []
+
     for path, markdown in tqdm(markdowns.items(), desc="make cards"):
-        # TODO it's not very clear when we have relative paths and when absolute paths
-        # we could always work with absolute paths unless in the name?
-        # need to see how that handles well with meta.json and other stuff
         images = Images.from_base(base / path.parent)
         markdown = markdown.with_rewritten_images(images.collect)
+
         card = Card(
-            markdown.maybe_prompted().as_mochi_md_str(),
-            images.as_api_attachments(),
-            path,
-            Direction.forward,
+            content=markdown.maybe_prompted().as_mochi_md_str(),
+            deck_name=path.parts[0],
+            attachments=images.as_api_attachments(),
+            path=path,
+            direction=Direction.forward,
         )
-        if meta.get(path, Meta(None, None)).forward is None:
-            new_cards.append(card)
-        else:
-            # TODO any checking for duplicate ids?
-            existing_cards[meta[path].forward] = card
+
+        match meta.get(path, Meta(None, None)).forward:
+            case None:
+                new_cards.append(card)
+            case str(card_id):
+                assert card_id not in existing_cards, card_id
+                existing_cards[card_id] = card
+            case _ as never:
+                assert_never(never)
+
         if markdown.has_reverse_prompt():
             card = Card(
-                markdown.reversed().maybe_prompted().as_mochi_md_str(),
-                images.as_api_attachments(),
-                path,
-                Direction.backward,
+                content=markdown.reversed().maybe_prompted().as_mochi_md_str(),
+                deck_name=path.parts[0],
+                attachments=images.as_api_attachments(),
+                path=path,
+                direction=Direction.backward,
             )
-            if meta.get(path, Meta(None, None)).backward is None:
-                new_cards.append(card)
-            else:
-                # TODO any checking for duplicate ids?
-                existing_cards[meta[path].backward] = card
+
+            match meta.get(path, Meta(None, None)).backward:
+                case None:
+                    new_cards.append(card)
+                case str(card_id):
+                    assert card_id not in existing_cards, card_id
+                    existing_cards[card_id] = card
+                case _ as never:
+                    assert_never(never)
+
     return existing_cards, new_cards
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,20 +12,18 @@ from cards.data import Card, Meta
 
 def states_from_apply_diff(
     auth: HTTPBasicAuth,
-    deck_id: str,
+    decks: Mapping[str, str],  # deck name -> mochi deck id
     state: dict[str, api.Card],
     diff: MochiDiff,
     meta: dict[Path, Meta],
 ) -> Iterator[tuple[dict[str, api.Card], dict[Path, Meta]]]:
     for id, card in diff.changed.items():
-        # TODO or we want the raw call? because we keep the local state as generic jsons?
-        # unless we really make a wrapped layer around a cached kind of api?
         u = api.update_card(
             auth,
             api.Card(
                 id=id,
                 content=card.content,
-                deck_id=deck_id,
+                deck_id=decks[card.deck_name],
             ),
             attachments=card.attachments,
         )
@@ -38,7 +36,7 @@ def states_from_apply_diff(
         yield state, meta
 
     for card in diff.new:
-        u = api.create_card(auth, deck_id, card.content, card.attachments)
+        u = api.create_card(auth, decks[card.deck_name], card.content, card.attachments)
         meta.setdefault(card.path, Meta(None, None)).set_by_direction(
             card.direction, u.id
         )
@@ -58,15 +56,17 @@ class MochiDiff:
         remote: dict[str, api.Card],
         existing: dict[str, Card],
         new: list[Card],
+        decks: Mapping[str, str],  # deck name -> mochi deck id
     ):
         assert set(existing) <= set(remote), "Remote deletion is not supported."
         changed = {
             id: card
             for id, card in existing.items()
-            # TODO not very happy here with how we compare == and !=
-            # this logic is "deep" because of how we create content and images
-            # and it's a bit disconnected to have it here
-            if remote[id].content != card.content
+            # TODO not very happy with the comparison here
+            # content contains the image hashes, so content is enough to compare to also detect image changes
+            # but deck_name is separate so we need to compare it, how to deal with things that we might add?
+            if (remote[id].content != card.content)
+            or (remote[id].deck_id != decks[card.deck_name])
         }
         removed = [c for c in remote.values() if c.id not in existing]
         return cls(changed, removed, new)
@@ -75,8 +75,6 @@ class MochiDiff:
         return len(self.changed) + len(self.removed) + len(self.new)
 
     def print_summary(self):
-        # TODO no info yet for "removed" until it happens
-        # no local path, so we might add the query content?
         for c in self.changed.values():
             print(f"changed from {c.path}")
         for c in self.new:

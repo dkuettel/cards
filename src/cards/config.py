@@ -9,15 +9,15 @@ from serde.toml import from_toml
 
 @serde
 @dataclass
-class Sync:
-    path: Path
-    deck_id: str
-
-
-@serde
-@dataclass
 class Config:
-    sync: Sync
+    # where the cards are
+    # the path can be absolute, but relative is interpreted relative to the file
+    path: Path
+
+    # maps folders relative to self.path to deck ids
+    # just one level hierarchy
+    # NOTE only folder that are mentioned here are synced
+    decks: dict[str, str]
 
     @classmethod
     def from_base(cls, base: Path):

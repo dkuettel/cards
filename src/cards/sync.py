@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from pathlib import Path
 
 import click
@@ -15,48 +16,46 @@ from cards.data import (
 from cards.state import MochiDiff, states_from_apply_diff
 
 
-def sync(token: str, deck_id: str, path: Path):
+def sync(token: str, base: Path, decks: Mapping[str, str]):
     auth = auth_from_token(token)
 
-    markdowns = read_markdowns(path)
-    meta = read_meta(path)
+    markdowns = read_markdowns(base, decks.keys())
+    meta = read_meta(base)
 
     synced_meta = get_synced_meta(markdowns, meta)
     meta_diff = MetaDiff.from_states(meta, synced_meta)
     meta_diff.print_summary()
     if meta_diff.count() > 0:
         click.confirm("Continue?", abort=True)
-        write_meta(path, synced_meta)
+        write_meta(base, synced_meta)
         meta = synced_meta
 
-    existing_cards, new_cards = get_cards(path, markdowns, meta)
+    existing_cards, new_cards = get_cards(base, markdowns, meta)
 
-    # TODO do we want to keep state, our best guess of remote?
-    # TODO see if we can move all tqdm stuff high up here? so that the decision how/what to show is top-level
     remote = {
         c.id: c
+        for deck_name, deck_id in decks.items()
         for c in tqdm(
             list_cards(auth, deck_id),
             total=len(existing_cards),
-            desc="list cards",
+            desc=f"list cards of deck {deck_name}",
         )
     }
     for card in remote.values():
-        assert not card.archived
-        assert card.trashed is None
-        assert not card.review_reverse
-        assert card.template_id is None
+        assert not card.archived, card.id
+        assert card.trashed is None, card.id
+        assert not card.review_reverse, card.id
+        assert card.template_id is None, card.id
 
-    diff = MochiDiff.from_states(remote, existing_cards, new_cards)
+    diff = MochiDiff.from_states(remote, existing_cards, new_cards, decks)
     diff.print_summary()
 
     if diff.count() > 0:
         click.confirm("Continue?", abort=True)
         for state, meta in tqdm(
-            states_from_apply_diff(auth, deck_id, remote, diff, meta),
+            states_from_apply_diff(auth, decks, remote, diff, meta),
             total=diff.count(),
             desc="sync",
         ):
-            # TODO also write state, for cache everytime?
             assert len(state) > 0
-            write_meta(path, meta)
+            write_meta(base, meta)

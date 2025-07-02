@@ -5,6 +5,7 @@ because they are non-standard and generated
 so we put all "unsafe" code here behind a
 type-safe interface for the rest of the code base
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -47,13 +48,16 @@ class Markdown:
         return cls.from_str(path.read_text())
 
     def as_mochi_md_str(self) -> str:
-        return pandoc.write(
+        data = pandoc.write(
             Pandoc(Meta({}), self.body),
             format="markdown+hard_line_breaks",
             # NOTE columns=3 and wrap=none forces rulers to be exactly 3 dashes (---)
             # mochi accepts only exactly 3 dashes (---) as a new page
             options=["--columns=3", "--wrap=none"],
         )
+        # TODO note sure in what case we get what
+        assert type(data) is str, type(data)
+        return data
 
     def reversed(self) -> Markdown:
         first, second = split_blocks(self.body)
