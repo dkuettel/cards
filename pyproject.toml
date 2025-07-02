@@ -28,3 +28,4 @@ packages = ["src/cards"]
 [tool.pyright]
 include = ["src"]
 typeCheckingMode = "standard"
+reportUnreachable = false
