@@ -53,12 +53,23 @@ def backup():
 
 @app.command()
 def rename(
-    source: Path,
-    target: Path,
+    path: Path,
+    name: str,
     edit: Annotated[bool, Option("--edit/--no-edit", "-e")] = False,
 ):
-    # NOTE only renames md files that are also in the meta.json, but not other connected files like images
+    """
+    only renames, does not move, file stays in the same place
+    NOTE only renames md files that are also in the meta.json, but not other connected files like images
+    """
     from cards.data import rename
+
+    source = path
+    target = source.parent / name
+
+    print(f"{source} -> {target}")
+
+    assert source.parent == target.parent
+    assert source.suffix == target.suffix
 
     rename(state.base, source, target)
 
