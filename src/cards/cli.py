@@ -75,3 +75,32 @@ def rename(
 
     if edit:
         subprocess.run(["nvim", str(target)], check=True)
+
+
+@app.command()
+def show(path: Path):
+    """show some info about a card"""
+    import pandoc
+
+    txt = path.read_text()
+
+    _, body = pandoc.read(path.read_text(), format="markdown")  # pyright: ignore[reportGeneralTypeIssues]
+
+    formatted = pandoc.write(
+        pandoc.types.Pandoc(pandoc.types.Meta({}), body),  # pyright: ignore[reportAttributeAccessIssue]
+        # NOTE this is the format i use in nvim too
+        format="markdown",
+    )
+    print(formatted)
+
+    print()
+    if txt.strip() == formatted.strip():
+        print("File is formatted.")
+    else:
+        print("File is not formatted.")
+
+    print()
+    for block in pandoc.iter(body):
+        match block:
+            case pandoc.types.Image(_, _, (path, _)):  # pyright: ignore[reportAttributeAccessIssue]
+                print(f"image at {path}")
