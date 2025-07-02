@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
+from shutil import copyfile
 
 import typer
 from PIL import Image
@@ -207,12 +208,25 @@ class Images:
         return [Attachment(name, data) for name, data in self.data.items()]
 
 
-def rename(base: Path, source: Path, target: Path):
+def move(base: Path, source: Path, target: Path):
+    """
+    this is verbose and validates things
+    can be used to move and/or rename
+    """
+
+    if not source.exists():
+        print("Source does not exist.", file=sys.stderr)
+        raise typer.Abort()
+
+    if target.exists():
+        print(f"Target {target} already exists.", file=sys.stderr)
+        raise typer.Abort()
+
     # NOTE we need to resolve everything so that we can compute relative paths reliably
     base = base.resolve(strict=True)
     try:
-        source = source.resolve(strict=True).relative_to(base)
-        target = target.resolve(strict=False).relative_to(base)
+        based_source = source.resolve(strict=True).relative_to(base)
+        based_target = target.resolve(strict=False).relative_to(base)
     except ValueError:
         print(
             f"Source {source} and target {target} must be inside base {base}.",
@@ -220,17 +234,39 @@ def rename(base: Path, source: Path, target: Path):
         )
         raise typer.Abort()
 
-    if target.exists():
-        print(f"Target {target} already exists.", file=sys.stderr)
+    if based_source == based_target:
+        print("Source and target cannot be the same.", file=sys.stderr)
         raise typer.Abort()
 
     meta = read_meta(base)
 
-    if source not in meta:
-        print(f"Source {source} is not in {base / 'meta.json'}.", file=sys.stderr)
+    if based_source not in meta:
+        print(f"Source {based_source} is not in {base / 'meta.json'}.", file=sys.stderr)
         raise typer.Abort()
 
-    meta[target] = meta.pop(source)
-    (base / source).rename(base / target)
+    meta[based_target] = meta.pop(based_source)
+
+    image_paths = Markdown.from_path(base / based_source).get_image_paths()
+    if based_source.parent != based_target.parent:
+        for ip in image_paths:
+            if (base / based_target.parent / ip).exists():
+                print(
+                    f"Image at {base / based_target.parent / ip} already exists.",
+                    file=sys.stderr,
+                )
+                raise typer.Abort()
+
+    print(f"{base / based_source} -> {base / based_target}")
+    copyfile(base / based_source, base / based_target)
+    if based_source.parent != based_target.parent:
+        for ip in image_paths:
+            print(
+                f"{base / based_source.parent / ip} -> {base / based_target.parent / ip}"
+            )
+            copyfile(base / based_source.parent / ip, base / based_target.parent / ip)
+
+    (base / based_source).unlink()
+    for ip in image_paths:
+        (base / based_source.parent / ip).unlink()
 
     write_meta(base, meta)

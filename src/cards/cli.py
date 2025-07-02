@@ -1,15 +1,16 @@
 import subprocess
+import sys
 from pathlib import Path
 from typing import Annotated
 
-from typer import Option, Typer
+import typer
 
 
 class state:
     base: Path = Path("./data")
 
 
-app = Typer(pretty_exceptions_enable=True, no_args_is_help=True)
+app = typer.Typer(pretty_exceptions_enable=True, no_args_is_help=True)
 
 
 @app.callback()
@@ -53,28 +54,53 @@ def backup():
 
 @app.command()
 def rename(
-    path: Path,
+    source: Path,
     name: str,
-    edit: Annotated[bool, Option("--edit/--no-edit", "-e")] = False,
+    edit: Annotated[bool, typer.Option("--edit/--no-edit", "-e")] = False,
 ):
     """
     only renames, does not move, file stays in the same place
     NOTE only renames md files that are also in the meta.json, but not other connected files like images
     """
-    from cards.data import rename
+    from cards.data import move
 
-    source = path
-    target = source.parent / name
-
-    print(f"{source} -> {target}")
-
-    assert source.parent == target.parent
-    assert source.suffix == target.suffix
-
-    rename(state.base, source, target)
+    target = source.with_name(name)
+    move(state.base, source, target)
 
     if edit:
         subprocess.run(["nvim", str(target)], check=True)
+
+
+@app.command()
+def move(source: Path, deck: str):
+    """
+    this does not rename, but only moves it to another deck
+    card id stays the same
+    only cards that exist in meta.json can be moved
+    images are also moved
+    """
+    from cards.config import Config
+    from cards.data import move
+
+    config = Config.from_base(state.base)
+
+    if deck not in config.decks:
+        print(f"Deck {deck} does not exist.", file=sys.stderr)
+        raise typer.Abort()
+
+    try:
+        based_source = source.resolve(strict=True).relative_to(
+            state.base.resolve(strict=True)
+        )
+    except ValueError:
+        print(
+            f"Source {source} must be inside base {state.base}.",
+            file=sys.stderr,
+        )
+        raise typer.Abort()
+
+    target = state.base / deck / Path(*based_source.parts[1:])
+    move(state.base, source, target)
 
 
 @app.command()
