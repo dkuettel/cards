@@ -123,3 +123,18 @@ def show(path: Path):
     print()
     for path in md.get_image_paths():
         print(f"image at {path}")
+
+
+@app.command()
+def fetch(card_id: str):
+    from pprint import pp
+
+    from cards.api import auth_from_token, raw_retrieve_card
+    from cards.config import Credentials
+
+    credentials = Credentials.from_base(state.base)
+    auth = auth_from_token(credentials.mochi.token)
+
+    card = raw_retrieve_card(auth, card_id)
+
+    pp(card)
