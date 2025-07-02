@@ -8,7 +8,7 @@ type-safe interface for the rest of the code base
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
@@ -41,6 +41,7 @@ class Markdown:
     @classmethod
     def from_str(cls, text: str):
         _, body = pandoc.read(text, format="markdown")  # pyright: ignore
+        assert type(body) is list, type(body)
         return cls(body)
 
     @classmethod
@@ -58,6 +59,15 @@ class Markdown:
         # TODO note sure in what case we get what
         assert type(data) is str, type(data)
         return data
+
+    def as_formatted(self) -> str:
+        formatted = pandoc.write(
+            Pandoc(Meta({}), self.body),  # pyright: ignore[reportAttributeAccessIssue]
+            # NOTE this is the format i use in nvim too
+            format="markdown",
+        )
+        assert type(formatted) is str, type(formatted)
+        return formatted
 
     def reversed(self) -> Markdown:
         first, second = split_blocks(self.body)
@@ -113,6 +123,15 @@ class Markdown:
                     # TODO what happens to the iter if we change things as we go?
                     block[2] = transform(path)
         return Markdown(body)
+
+    def get_image_paths(self) -> list[Path]:
+        def g() -> Iterator[Path]:
+            for block in pandoc.iter(self.body):
+                match block:
+                    case Image(_, _, (path, _)):
+                        yield Path(path)
+
+        return list(g())
 
 
 def split_blocks(blocks: list[Block]) -> tuple[list[Block], list[Block]]:

@@ -80,17 +80,12 @@ def rename(
 @app.command()
 def show(path: Path):
     """show some info about a card"""
-    import pandoc
+    from cards.markdown import Markdown
 
     txt = path.read_text()
+    md = Markdown.from_str(txt)
+    formatted = md.as_formatted()
 
-    _, body = pandoc.read(path.read_text(), format="markdown")  # pyright: ignore[reportGeneralTypeIssues]
-
-    formatted = pandoc.write(
-        pandoc.types.Pandoc(pandoc.types.Meta({}), body),  # pyright: ignore[reportAttributeAccessIssue]
-        # NOTE this is the format i use in nvim too
-        format="markdown",
-    )
     print(formatted)
 
     print()
@@ -100,7 +95,5 @@ def show(path: Path):
         print("File is not formatted.")
 
     print()
-    for block in pandoc.iter(body):
-        match block:
-            case pandoc.types.Image(_, _, (path, _)):  # pyright: ignore[reportAttributeAccessIssue]
-                print(f"image at {path}")
+    for path in md.get_image_paths():
+        print(f"image at {path}")
