@@ -34,11 +34,10 @@ def sync(token: str, base: Path, decks: Mapping[str, str]):
 
     remote = {
         c.id: c
-        for deck_name, deck_id in decks.items()
         for c in tqdm(
-            list_cards(auth, deck_id),
+            list_cards(auth),
             total=len(existing_cards),
-            desc=f"list cards of deck {deck_name}",
+            desc=f"list cards",
         )
     }
     for card in remote.values():
